@@ -1,0 +1,58 @@
+globals
+[
+  gamma-without-CBC
+  gamma-with-CBC
+  gamma-regulation-rate
+]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to update-crop-loss-and-crop-save-transition-crop-patch-4-to-0
+  ; compute crop-loss = total crop-loss of the patch after successive cycles of SIS
+  let duration-without-predators (((age - adult-occupation - juvenile-occupation) - infection-date) - 5) ; 1st - 2nd - 5 -> 1st = t arrival of adults, 2nd = t infection, - 5 = minimal latent period for a patch
+  let regulation-rate exp(- gamma-regulation-rate * (duration-without-predators / length-season))
+  
+  let max-th-crop-loss 0.6 * exp(- gamma-without-CBC * (infection-date / length-season)) + 0.05
+  ; let min-th-crop-loss exp(- gamma-with-CBC * (infection-date / length-season))
+  let min-th-crop-loss 0.05
+  
+  let difference (max-th-crop-loss - min-th-crop-loss)
+  let crop-loss-r (max-th-crop-loss - (difference * regulation-rate)) ; crop-loss-r = real crop-loss for this SIS cycle
+    
+  set crop-loss (crop-loss + crop-loss-r)
+    
+  ; compute crop-save
+  let delta (max-th-crop-loss - crop-loss-r)
+  set crop-save (crop-save + delta)
+end
+
+
+to update-crop-loss-and-crop-save-end-season
+  ; update crop-loss for patches that are still infected (never cured or re-infected after a SIS cycle)
+  ask patches with [land-cover = 1 and (state = 1 OR state = 2 OR state = 3)]
+  [
+    let crop-loss-residual exp(- gamma-without-CBC * (infection-date / length-season))
+    set crop-loss crop-loss + crop-loss-residual
+  ] 
+    
+  ; update crop-loss and crop-save for patches that are going to be cared (there are already juveniles on it)
+  ask patches with [land-cover = 1 and state = 4]
+  [
+    ; compute crop-loss = total crop-loss of the patch after successive cycles of SIS
+    let duration-without-predators (((age - adult-occupation - juvenile-occupation) - infection-date) - 5)
+    let regulation-rate exp(- gamma-regulation-rate * (duration-without-predators / length-season))
+      
+    let max-th-crop-loss 0.6 * exp(- gamma-without-CBC * (infection-date / length-season)) + 0.05
+    ; let min-th-crop-loss exp(- gamma-with-CBC * (infection-date / length-season))
+    let min-th-crop-loss 0.05
+      
+    let difference (max-th-crop-loss - min-th-crop-loss)
+    let crop-loss-r (max-th-crop-loss - (difference * regulation-rate)) ; crop-loss-r = real crop-loss for this SIS cycle
+      
+    set crop-loss (crop-loss + crop-loss-r)
+      
+    ; compute crop-save
+    let delta (max-th-crop-loss - crop-loss-r)
+    set crop-save (crop-save + delta)
+  ]
+end

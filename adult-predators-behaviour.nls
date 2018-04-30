@@ -1,0 +1,219 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; forage
+
+; forage:
+; if the adult-predators can still fly (flight-capacity > 0) and currently stays on a patch like:
+; patch SNH
+; patch crop with state = 0,1,4
+; patch crop with state = 2 but not the first arrived
+; patch crop with state = 3 but not the first arrived
+; move
+; otherwise stay here (nothing happens) or die (if flight-capacity = 0)
+
+to forage
+  if date >= date-for-first-foraging-movement
+  [
+    if I-cannot-stay-here
+    [
+      ifelse [land-cover] of patch-here = 1
+      ; on crop -> forage or die VS on SNH -> forage
+      [
+        ifelse random-float 1 < (1 - proba-mortality)
+        ; forage or die
+        [foraging-pattern]
+        [
+          if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] 
+          set death-counter death-counter + 1
+          die
+        ]
+      ]
+      [foraging-pattern]
+    ]
+  ]
+end
+
+to-report I-cannot-stay-here 
+  report SNH-patch OR crop-patch-state-0-1-4 OR crop-patch-state2-but-not-first OR crop-patch-state3-but-not-first OR crop-patch-state3-and-first-but-time-for-eggs
+end
+
+to-report can-I-still-fly?
+  report flight-capacity > 0
+end
+
+
+;;; conditions (adult-predators unable to stay here)
+
+; SNH patch
+to-report SNH-patch
+  report [land-cover] of patch-here = 0
+end
+
+; crop patches with state = 0, 1 or 4
+to-report crop-patch-state-0-1-4
+  report [land-cover] of patch-here = 1 and ([state] of patch-here = 0 or [state] of patch-here = 1 or [state] of patch-here = 4)
+end
+
+; crop patch state 2 but not first
+to-report crop-patch-state2-but-not-first
+  report [state] of patch-here = 2 and [land-cover] of patch-here = 1 and [first-adult-predator-arrived] of patch-here != [who] of self
+end
+
+; crop patch state 3 but not first
+to-report crop-patch-state3-but-not-first
+  report [state] of patch-here = 3 and [land-cover] of patch-here = 1 and [first-adult-predator-arrived] of patch-here != [who] of self
+end
+
+; crop patch state 3 but time for eggs
+to-report crop-patch-state3-and-first-but-time-for-eggs
+  report [state] of patch-here = 3 and [land-cover] of patch-here = 1 and [first-adult-predator-arrived] of patch-here = [who] of self and [adult-occupation] of patch-here = [duration-before-eggs] of patch-here
+end
+
+;;; foraging pattern
+
+to foraging-pattern
+  ifelse any? neighbors4 with [state = 2 and land-cover = 1] 
+  [
+    ; choose arrival-patch
+    let more-infected-crop-patch-in-neighbors4 max-one-of neighbors4 with [land-cover = 1 and state = 2] [time-since-infection] 
+    
+    ; update departure-patch
+    if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] ; if adult-predators was the only one on this patch
+    
+    ; adult-predator agent moves to arrival-patch
+    face more-infected-crop-patch-in-neighbors4 
+    move-to more-infected-crop-patch-in-neighbors4 
+    
+    ; update adult-predator agent
+    ;set flight-capacity flight-capacity - 1
+    
+    ; update arrival-patch
+    ask patch-here [set adult-predators-presence TRUE set visit-counter visit-counter + 1]
+  ] 
+  [
+    ; choose arrival-patch
+    let p one-of neighbors4 
+    
+    ; update departure-patch
+    if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] ; if adult-predators was the only one on this patch
+    
+    ; adult-predator agent moves to arrival-patch
+    face p 
+    move-to p 
+    
+    ; update adult-predator agent
+    ;set flight-capacity flight-capacity - 1
+    
+    ; update arrival-patch
+    ask patch-here [set adult-predators-presence TRUE]
+  ]
+end
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+
+to flee
+  
+  assign-flee-capacity
+  
+  flee-pattern
+  
+end
+
+to assign-flee-capacity
+  
+  ; at date = flee-to-snh
+  
+  ;; adult-predators -> assign flee-capacity 
+  ask adult-predators [set flee-capacity length-season - date-to-flee] ; date
+  
+  ;; juveniles -> convert to adults, and assign flee-capacity according to the time they should have spent before converting
+  ask patches with [land-cover = 1 and state = 4]
+  [
+    ask juvenile-predators-here [die]
+    sprout-adult-predators 1
+    [
+      set color blue
+      ;set flight-capacity max-flight-capacity
+      set flee-capacity ((length-season - date-to-flee) - ([duration-juvenile-occupation] of patch-here - [juvenile-occupation] of patch-here))
+    ]
+  ]
+end
+
+; pb : lorsque l'on flee, certains patchs SNH contiennent déjà plusieurs adults
+; il faudrait enlever de flee pattern la condition "patch libre" pour rejoindre
+; et revenir à une condition overwintering où on élimine les pops en excès
+
+to flee-pattern
+  
+  ; check if close to a SNH
+  ask adult-predators
+  [set close? ([closer-SNH-distance] of patch-here < flee-capacity)]
+  
+  ; if too far of a SNH -> die
+  ask adult-predators with [ [land-cover] of patch-here = 1 and close? = false] [ die ]
+  
+  ; if exogenous mortality should occur (during movement) -> die
+  ask adult-predators
+  [
+    ; create a n-list (n = nb of jumps to move to the SNH) of reporters (survival-probability) 
+    ; value-test reports if the n-list includes at least 1 "false" = death occurs at 1 of the jumps -> value-test = true if the n-list includes at least 1 false
+    let value-test (member? true n-values [closer-SNH-distance] of patch-here [random-float 1 > (1 - proba-mortality)]) 
+    
+    ; if death occured -> die  
+    if  value-test = true  [if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] die]
+  ]
+  
+  ; for adult survivors (close to a SNH and no exogenous mortality) -> if at least 1 free patch of the closer SNH cluster, sprout a new adult on it and die, otherwise die
+  ; equivalent to "move to SNH cluster, on a free patch, or die if the cluster is already full of adults"
+  ask adult-predators with [ [land-cover] of patch-here = 1 and close? = TRUE ]
+  [
+    ; define the arrival SNH cluster (plabel)
+    let x [x-closer-SNH] of patch-here
+    let y [y-closer-SNH] of patch-here
+    let arrival-SNHcluster-label [plabel] of patch x y 
+        
+    ; does the arrival SNH cluster still contain at least 1 free patch? Y -> sprout an adult on this patch in priority/ N -> sprout an adult randomly on one patch of the cluster
+    let nb-vacant-patches count patches with [plabel = arrival-SNHcluster-label and adult-predators-presence = false]
+    ifelse nb-vacant-patches > 0
+    [ask one-of patches with [plabel = arrival-SNHcluster-label and adult-predators-presence = false][birth-adult-predators set adult-predators-presence true]]
+    [ask one-of patches with [plabel = arrival-SNHcluster-label][birth-adult-predators set adult-predators-presence true]]
+    
+    ; update the departure patch
+    ask patch-here [set adult-predators-presence false]
+    
+    ; kill the adult-predator on the departure patch
+    die
+    
+  ]  
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; hibernation
+
+;;; overwintering
+; all juveniles die because they are in crop patches
+; carrying-capacity of SNH cluster: 1/1, included into the flee method
+; adults in SNH clusters survive to the overwintering with a proba
+
+to overwintering
+  
+  ;;; juveniles can not do overwintering
+  ask juvenile-predators [die]
+  
+  ;;; excessive adults in clusters die randomly
+  ask patches with [land-cover = 0 and count adult-predators-here > 1]
+  [
+    let nb-adults-here count adult-predators-here
+    ask n-of (nb-adults-here - 1) adult-predators-here [die]
+  ]
+  
+  ;;; overwintering of adults
+  adult-overwintering-pattern
+
+end
+
+to adult-overwintering-pattern
+  ask adult-predators [ if (random-float 1 > proba-overwintering) [die] ]
+end
+
+
+
+

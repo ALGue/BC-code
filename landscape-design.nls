@@ -1,0 +1,210 @@
+globals 
+[
+  average-green-green-neighbors
+  while-counter-ld
+]
+
+; initiate a landscape grid according to the parameters of composition (number-of-SNH-patches) and configuration (target-for-agregation)
+; change value of land-cover to do it
+; when the design is stable, identify SNH clusters and compute the proximity of every patch of the grid to the closer cluster
+
+to landscape-design
+  
+  ; presence of SNH patches ?
+  ifelse proportion-of-SNH-patches > 0
+  [
+  
+    ; value of number-of-SNH-patches according to proportion-of-SNH-patches
+    let total-number-of-patches-on-the-grid count patches ; total nb of patches on the grid
+    let number-of-SNH-patches precision (total-number-of-patches-on-the-grid * proportion-of-SNH-patches / 100) 0 ; precision => integer
+  
+    ; random land-cover landscape, according to 'number-of-SNH-patches'
+    ask patches [set land-cover 1]
+    ask n-of number-of-SNH-patches patches [set land-cover 0]
+  
+    ; land-cover permutations to find a configuration close to 'target-of-agregation'
+  
+    set average-green-green-neighbors mean [count neighbors with [land-cover = 0 ]] of patches with [land-cover = 0] ; while-loop fits 'average-green-green-neighbors' with 'target-of-agregation'
+  
+    set while-counter-ld 0
+  
+    while [(abs(average-green-green-neighbors - target-for-agregation) > accuracy-threshold) = TRUE AND (while-counter-ld < 500) = TRUE]
+    [
+      ; show average-green-green-neighbors
+    
+      set while-counter-ld while-counter-ld + 1
+    
+      show while-counter-ld
+    
+      set average-green-green-neighbors mean [count neighbors with [land-cover = 0]] of patches with [land-cover = 0]
+    
+      if-else average-green-green-neighbors < target-for-agregation
+      [
+        ask one-of patches with [land-cover = 0]
+        [ 
+          let N count neighbors with [land-cover = 0]
+          let more-green-neighbors-than-me patches with [land-cover = 0 and self != myself and (member? self [neighbors] of myself = false )] with [count neighbors with [land-cover = 0] >= N and count neighbors with [land-cover = 0] < count neighbors]
+          ;show more-green-neighbors-than-me
+          if count more-green-neighbors-than-me > 0 
+          [
+            ask one-of more-green-neighbors-than-me 
+            [
+              ask one-of neighbors with [land-cover = 1] [set land-cover 0]
+              ask myself [set land-cover 1]
+            ]
+          ]
+        ]
+      ]
+      ; ifelse 2nd brackets
+      [ 
+        ask one-of patches with [land-cover = 0]
+        [ 
+          let N count neighbors with [ land-cover = 0 ]
+          let less-green-neighbors-than-me patches with [land-cover = 1 and (member? self [neighbors] of myself = false )] with [count neighbors with [land-cover = 0] < N and count neighbors with [land-cover = 0] < count neighbors]
+          if count less-green-neighbors-than-me > 0 
+          [
+            ask one-of less-green-neighbors-than-me 
+            [
+              ask one-of neighbors with [land-cover = 1] [set land-cover 0]
+              ask myself [set land-cover 1]
+            ]
+          ]
+        ]
+      ] ; end ifelse
+      
+      color-patches ; color crop patches in yellow and SNH in green
+    
+    ] ; end while
+    
+    
+    ; initiate attributes of patches
+    initiate-patches
+    
+    ; identify SNH clusters and label them
+    find-clusters
+  
+    ; for every crop patch, compute the distance (minimal nb of jumps) to the closest SNH patch
+    computation-of-proximity-with-SNH
+    
+  ]
+  ; if proportion-of-SNH-patches = 0 => control
+  [
+    ask patches [set land-cover 1]
+    color-patches
+    initiate-patches
+  ]
+  
+end
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; color patches according to land-cover
+
+to color-patches
+  ask patches
+  [
+    if land-cover = 0 [set pcolor green] ; SNH
+    if land-cover = 1 [set pcolor yellow] ; Crop
+  ]
+end
+
+;;; identify clusters and label them
+
+to find-clusters
+  ask patches[set cluster nobody] ; initially, patches have no clusters
+  
+  loop [
+    
+    ; pick a random patch that isn't in a cluster yet
+    let seed one-of patches with [cluster = nobody]
+    
+    ; if we can't find one, then we're done!
+    if seed = nobody
+    [ 
+      show-clusters
+      stop 
+    ]
+    
+    ; otherwise, make the patch the "leader" of a new cluster, by assigning itself to its own cluster
+    ; then call grow-cluster to find the rest of the cluster
+    ask seed
+    [ 
+      set cluster self
+      grow-cluster 
+    ]
+    
+  ]
+  
+  display
+end
+
+to grow-cluster 
+  ask neighbors4 with [(cluster = nobody) and (pcolor = [pcolor] of myself)]
+  [ 
+    set cluster [cluster] of myself
+    grow-cluster 
+  ]
+end
+
+to show-clusters ; once all the clusters have been found put numeric labels on them, so the user can see that the clusters were identified correctly
+  let counter 0
+  loop
+  [ 
+    ;; pick a random patch we haven't labeled yet
+    let p one-of patches with [plabel = ""]
+    if p = nobody [ stop ]
+    
+    ;; give the same label to all patches in the chosen patch's cluster 
+    ask p [ask patches with [cluster = [cluster] of myself] [set plabel counter]]
+    set counter counter + 1 
+  ]
+end
+
+
+to computation-of-proximity-with-SNH
+
+  ; les patchs SNH s'attribuent eux-mêmes leurs propres coordonnées et distances
+  ask patches with [land-cover = 0]
+  [
+    set closer-SNH-distance 0
+    set x-closer-SNH [pxcor] of self
+    set y-closer-SNH [pycor] of self
+  ]
+
+  ; les patchs SNH attribuent à leurs voisins deux choses : 1) une distance au plus proche SNH égale à 1, 2) leurs coodonnées de + proche SNH
+  ask patches with [land-cover = 0]
+  [
+    let x-closer-SNH-start pxcor
+    let y-closer-SNH-start pycor
+    ask neighbors4
+    [
+      if land-cover = 1
+      [
+        set closer-SNH-distance 1
+        set x-closer-SNH x-closer-SNH-start
+        set y-closer-SNH y-closer-SNH-start
+      ]
+    ]
+  ]
+
+  ; ensuite de proche en proche, les patchs de crops attribuent à leurs voisins une distance au plus proche SNH incrémentée selon les passages dans la boucle
+  ; ainsi que les coordonnées du SNH le + proche
+  while [any? patches with [closer-SNH-distance = 0 and land-cover = 1]]
+  [
+    ask patches with [closer-SNH-distance != 0]
+    [
+      ask neighbors4
+      [
+        if land-cover = 1 and  closer-SNH-distance = 0
+        [
+          set closer-SNH-distance [closer-SNH-distance + 1] of myself
+          set x-closer-SNH [x-closer-SNH] of myself
+          set y-closer-SNH [y-closer-SNH] of myself
+        ]
+      ]
+    ]
+  ]
+end
+
+

@@ -1,0 +1,170 @@
+globals [nb-infected-visited-per-year]
+
+to update-crop-patches
+  
+  ; update adult-predators-presence
+  ask patches with [count adult-predators-here = 0][set adult-predators-presence FALSE]
+  ask patches with [count adult-predators-here > 0][set adult-predators-presence TRUE]
+
+  ; update age for all patches
+  ask patches [set age date]
+
+  pattern-infection
+
+  ; update latent
+  ask patches with [land-cover = 1 and state = 1]
+  [
+    set time-since-infection time-since-infection + 1
+    if time-since-infection = latent-period-duration [set next-state 2]
+  ]
+
+  ; update attractive without / with presence of adult-predators
+
+  ask patches with [land-cover = 1 and state = 2 and adult-predators-presence = FALSE]
+  [
+    set time-since-infection time-since-infection + 1 ; utilité ?
+  ]
+
+  ask patches with [land-cover = 1 and state = 2 and adult-predators-presence = TRUE]
+  [
+    ;
+    set first-adult-predator-arrived [who] of one-of adult-predators-here
+    
+    set time-since-infection time-since-infection + 1 ; utilité ?
+    set next-state 3
+  ]
+
+  ; update occupied by adults
+  ask patches with [land-cover = 1 and state = 3 and adult-predators-presence = TRUE]
+  [
+    
+    
+    set time-since-infection time-since-infection + 1 ; utilité ?
+    set adult-occupation adult-occupation + 1
+    if adult-occupation = duration-before-eggs 
+    [
+      if random-float 1 <= proba-birth-juvenile-predators ; taux de natalité des adult-predators
+      [set next-state 4]
+    ]
+  ]
+
+  ; update occupied by juveniles
+  ask patches with [land-cover = 1 and state = 4]
+  [
+    set time-since-infection time-since-infection + 1 ; utilité ?
+    set juvenile-occupation juvenile-occupation + 1
+    if juvenile-occupation = duration-juvenile-occupation [set next-state 0]
+  ]
+
+  ; transitions
+  transitions-between-states-for-crop-patches
+
+  ; coloration
+  ask patches with [land-cover = 1 and state != 0][set pcolor scale-color blue state 4 1]
+  ask patches with [land-cover = 1 and state = 0] [set pcolor yellow]
+
+end
+
+;;;
+
+to transitions-between-states-for-crop-patches
+  
+  ; sane -> latent
+  ask patches with [land-cover = 1 and state = 0 and next-state = 1]
+  [
+    ; update state and assign attributes
+    set state 1
+    set infection-date age
+    set time-since-infection 0
+    set latent-period-duration 6 + random 2 ; 6,7,8
+    
+    ; write distribution of infection events
+    write-distribution-infection-tick
+        
+    ; if first infection, compute the value crop-loss-1st-infection = theoretical crop-loss without any regulation
+    if crop-loss-1st-infection = 0
+    [set crop-loss-1st-infection (1 - (infection-date / length-season) ^ gamma-without-CBC)]
+  ]
+
+  ; latent -> attractive
+  ask patches with [land-cover = 1 and state = 1 and next-state = 2]
+  [
+    set state 2
+  ]
+
+  ; attractive -> occupied by adults
+  ask patches with [land-cover = 1 and state = 2 and next-state = 3]
+  [
+    ; update state and assign attributes
+    set state 3
+    set adult-occupation 0
+    set duration-before-eggs 6 + random 2 ; 6,7,8
+    
+    ; write distribution of predators-arrival events
+    write-distribution-arrival-tick
+  ]
+
+  ; occupied by adults -> occupied by juveniles
+  ask patches with [land-cover = 1 and state = 3 and next-state = 4]
+  [
+    ; update state and assign attributes
+    set state 4
+    birth-juvenile-predators
+    set juvenile-occupation 0
+    set duration-juvenile-occupation 15 + random 6
+  ]
+
+  ; occupied by juveniles -> sane
+  ask patches with [land-cover = 1 and state = 4 and next-state = 0]
+  [
+    ; compute service (updated values of crop-loss and crop-save)
+    update-crop-loss-and-crop-save-transition-crop-patch-4-to-0
+    
+    ; increment var total nb of crop patches infected and visited
+    set nb-infected-visited-per-year nb-infected-visited-per-year + 1
+    
+    ; increment attribute of this patch to count cycles of SIS
+    set nb-cycles-infection-curation nb-cycles-infection-curation + 1
+    
+    ; update state and attributes
+    set state 0
+    set infection-date false
+    set time-since-infection 0
+    set latent-period-duration 0
+    set adult-occupation 0
+    set duration-before-eggs 0
+    set juvenile-occupation 0
+    set duration-juvenile-occupation 0
+    set first-adult-predator-arrived -1 ; reinitialization
+    
+    ; convert the juvenile turtle into an adult turtle
+    ask juvenile-predators-here [die]
+    birth-adult-predators
+  ]
+end
+
+;;; rules for pattern-infection
+
+; beginning of infection in the year: var.?
+
+; assumptions:
+; infection depends on:
+; exogenous infection = basic rate and spatially randomized
+; infection state of the landscape at each tick? = when the number of infected patches increases, we can think that the virulence increases too => regulation by predators is important
+; influence of SNH patches as sources of pests? => relation with the number of SNH patches?
+; transition between years: is the infection-rate depends on the previous nb of infected patches?
+
+to pattern-infection
+  
+  ; each tick, a certain number of sane patches are infected
+  let stock-of-sane-patches count patches with [land-cover = 1 and state = 0]
+  ifelse stock-of-sane-patches > infection-rate 
+  [
+    let number-of-sane-patches-to-infect infection-rate
+    ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0][set next-state 1]
+  ]
+  [
+    let number-of-sane-patches-to-infect stock-of-sane-patches
+    ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0][set next-state 1]
+  ] 
+end
