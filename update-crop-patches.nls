@@ -2,9 +2,9 @@ globals [nb-infected-visited-per-year]
 
 to update-crop-patches
   
-  ; update adult-predators-presence
-  ask patches with [count adult-predators-here = 0][set adult-predators-presence FALSE]
-  ask patches with [count adult-predators-here > 0][set adult-predators-presence TRUE]
+  ; update predators-presence
+  ask patches with [(count adult-predators-here = 0) and (count juvenile-predators-here = 0)][set predator-presence FALSE]
+  ask patches with [(count adult-predators-here > 0) or (count juvenile-predators-here > 0)][set predator-presence TRUE]
 
   ; update age for all patches
   ask patches [set age date]
@@ -20,12 +20,12 @@ to update-crop-patches
 
   ; update attractive without / with presence of adult-predators
 
-  ask patches with [land-cover = 1 and state = 2 and adult-predators-presence = FALSE]
+  ask patches with [land-cover = 1 and state = 2 and predator-presence = FALSE]
   [
     set time-since-infection time-since-infection + 1 ; utilité ?
   ]
 
-  ask patches with [land-cover = 1 and state = 2 and adult-predators-presence = TRUE]
+  ask patches with [land-cover = 1 and state = 2 and predator-presence = TRUE]
   [
     ;
     set first-adult-predator-arrived [who] of one-of adult-predators-here
@@ -35,7 +35,7 @@ to update-crop-patches
   ]
 
   ; update occupied by adults
-  ask patches with [land-cover = 1 and state = 3 and adult-predators-presence = TRUE]
+  ask patches with [land-cover = 1 and state = 3 and predator-presence = TRUE]
   [
     
     
@@ -156,15 +156,22 @@ end
 
 to pattern-infection
   
-  ; each tick, a certain number of sane patches are infected
-  let stock-of-sane-patches count patches with [land-cover = 1 and state = 0]
-  ifelse stock-of-sane-patches > infection-rate 
+  if (ticks mod 3) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
   [
-    let number-of-sane-patches-to-infect infection-rate
-    ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0][set next-state 1]
+    ; each tick, a certain number of sane patches are infected
+    ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+    let stock-of-sane-patches count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0]
+    ifelse stock-of-sane-patches > infection-rate 
+    [
+      let number-of-sane-patches-to-infect infection-rate
+      ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+      ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+    ]
+    [
+      let number-of-sane-patches-to-infect stock-of-sane-patches
+      ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+      ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+    ] 
   ]
-  [
-    let number-of-sane-patches-to-infect stock-of-sane-patches
-    ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0][set next-state 1]
-  ] 
+  
 end

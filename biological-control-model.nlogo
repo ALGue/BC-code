@@ -35,7 +35,7 @@ patches-own
   x-closer-SNH
   y-closer-SNH
 
-  adult-predators-presence
+  predator-presence
   first-adult-predator-arrived
 
   state
@@ -77,7 +77,7 @@ to birth-adult-predators
     set date-for-first-foraging-movement min (list (random-poisson 10) 30) ; 10
     set flee-capacity 0
   ]
-  set adult-predators-presence true ; assign to patch-here that there is an adult-predator on him
+  set predator-presence true ; assign to patch-here that there is an adult-predator on him
 end
 
 to birth-juvenile-predators
@@ -87,7 +87,7 @@ end
 to initiate-patches
   ask patches
   [
-    set adult-predators-presence FALSE
+    set predator-presence FALSE
     set first-adult-predator-arrived FALSE
 
     set state 0
@@ -144,7 +144,7 @@ to transition-between-years
   [
     ; set flight-capacity max-flight-capacity
     set flee-capacity 0
-    ask patch-here [set adult-predators-presence TRUE] ; check
+    ask patch-here [set predator-presence TRUE] ; check
   ]
 
   ; update output var. nb. of patches with state3
@@ -552,7 +552,7 @@ INPUTBOX
 175
 240
 proba-birth-juvenile-predators
-0.75
+1.0
 1
 0
 Number
@@ -603,7 +603,7 @@ INPUTBOX
 1027
 511
 folder-path
-exp8
+NIL
 1
 0
 String

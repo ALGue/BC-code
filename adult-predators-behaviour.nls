@@ -21,7 +21,7 @@ to forage
         ; forage or die
         [foraging-pattern]
         [
-          if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] 
+          if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] 
           set death-counter death-counter + 1
           die
         ]
@@ -64,7 +64,7 @@ end
 
 ; crop patch state 3 but time for eggs
 to-report crop-patch-state3-and-first-but-time-for-eggs
-  report [state] of patch-here = 3 and [land-cover] of patch-here = 1 and [first-adult-predator-arrived] of patch-here = [who] of self and [adult-occupation] of patch-here = [duration-before-eggs] of patch-here
+  report ([state] of patch-here = 3) and ([land-cover] of patch-here = 1) and ([first-adult-predator-arrived] of patch-here = [who] of self) and ([adult-occupation] of patch-here = [duration-before-eggs] of patch-here)
 end
 
 ;;; foraging pattern
@@ -76,7 +76,7 @@ to foraging-pattern
     let more-infected-crop-patch-in-neighbors4 max-one-of neighbors4 with [land-cover = 1 and state = 2] [time-since-infection] 
     
     ; update departure-patch
-    if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] ; if adult-predators was the only one on this patch
+    if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
     
     ; adult-predator agent moves to arrival-patch
     face more-infected-crop-patch-in-neighbors4 
@@ -86,14 +86,14 @@ to foraging-pattern
     ;set flight-capacity flight-capacity - 1
     
     ; update arrival-patch
-    ask patch-here [set adult-predators-presence TRUE set visit-counter visit-counter + 1]
+    ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
   ] 
   [
     ; choose arrival-patch
     let p one-of neighbors4 
     
     ; update departure-patch
-    if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] ; if adult-predators was the only one on this patch
+    if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
     
     ; adult-predator agent moves to arrival-patch
     face p 
@@ -103,7 +103,7 @@ to foraging-pattern
     ;set flight-capacity flight-capacity - 1
     
     ; update arrival-patch
-    ask patch-here [set adult-predators-presence TRUE]
+    ask patch-here [set predator-presence TRUE]
   ]
 end
 
@@ -159,7 +159,7 @@ to flee-pattern
     let value-test (member? true n-values [closer-SNH-distance] of patch-here [random-float 1 > (1 - proba-mortality)]) 
     
     ; if death occured -> die  
-    if  value-test = true  [if count adult-predators-here = 1 [ask patch-here [set adult-predators-presence FALSE]] die]
+    if  value-test = true  [if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] die]
   ]
   
   ; for adult survivors (close to a SNH and no exogenous mortality) -> if at least 1 free patch of the closer SNH cluster, sprout a new adult on it and die, otherwise die
@@ -172,13 +172,13 @@ to flee-pattern
     let arrival-SNHcluster-label [plabel] of patch x y 
         
     ; does the arrival SNH cluster still contain at least 1 free patch? Y -> sprout an adult on this patch in priority/ N -> sprout an adult randomly on one patch of the cluster
-    let nb-vacant-patches count patches with [plabel = arrival-SNHcluster-label and adult-predators-presence = false]
+    let nb-vacant-patches count patches with [plabel = arrival-SNHcluster-label and predator-presence = false]
     ifelse nb-vacant-patches > 0
-    [ask one-of patches with [plabel = arrival-SNHcluster-label and adult-predators-presence = false][birth-adult-predators set adult-predators-presence true]]
-    [ask one-of patches with [plabel = arrival-SNHcluster-label][birth-adult-predators set adult-predators-presence true]]
+    [ask one-of patches with [plabel = arrival-SNHcluster-label and predator-presence = false][birth-adult-predators set predator-presence true]]
+    [ask one-of patches with [plabel = arrival-SNHcluster-label][birth-adult-predators set predator-presence true]]
     
     ; update the departure patch
-    ask patch-here [set adult-predators-presence false]
+    ask patch-here [set predator-presence false]
     
     ; kill the adult-predator on the departure patch
     die
