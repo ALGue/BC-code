@@ -1,3 +1,5 @@
+;; je fais un test branch
+
 globals
 [
   date
@@ -385,7 +387,7 @@ INPUTBOX
 177
 70
 init-nb-adults
-0.0
+100.0
 1
 0
 Number
@@ -396,7 +398,7 @@ INPUTBOX
 652
 275
 infection-rate
-11.0
+15.0
 1
 0
 Number
@@ -601,7 +603,7 @@ INPUTBOX
 1027
 511
 folder-path
-exp-control
+exp8
 1
 0
 String
@@ -1006,7 +1008,7 @@ NetLogo 6.0.2
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="init-nb-adults">
-      <value value="0"/>
+      <value value="100"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-mortality">
       <value value="6.0E-4"/>
@@ -1018,11 +1020,6 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proportion-of-SNH-patches">
-      <value value="1"/>
-      <value value="3"/>
-      <value value="5"/>
-      <value value="7"/>
-      <value value="9"/>
       <value value="10"/>
       <value value="30"/>
       <value value="50"/>
@@ -1037,15 +1034,8 @@ NetLogo 6.0.2
       <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
-      <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
       <value value="5"/>
-      <value value="7"/>
-      <value value="9"/>
       <value value="10"/>
-      <value value="11"/>
       <value value="15"/>
       <value value="20"/>
     </enumeratedValueSet>
@@ -1059,7 +1049,7 @@ NetLogo 6.0.2
       <value value="150"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;exp-control&quot;"/>
+      <value value="&quot;exp8&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
