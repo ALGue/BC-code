@@ -11,6 +11,7 @@ globals
   distribution-infection-file-name
   distribution-arrival-file-name
   map-service-indicator-file-name
+  time-for-crop-loss-file-name
 
   death-counter
 ]
@@ -43,6 +44,7 @@ patches-own
 
   infection-date
   time-since-infection
+  time-for-crop-loss
   latent-period-duration
   adult-occupation
   duration-before-eggs
@@ -74,7 +76,7 @@ to birth-adult-predators
   sprout-adult-predators 1
   [
     set color blue
-    set date-for-first-foraging-movement min (list (random-poisson 10) 30) ; 10
+    set date-for-first-foraging-movement min (list (random-poisson 4) 7) ; min entre value random poisson et date-limite de sortie
     set flee-capacity 0
   ]
   set predator-presence true ; assign to patch-here that there is an adult-predator on him
@@ -95,6 +97,8 @@ to initiate-patches
 
     set infection-date FALSE
     set time-since-infection 0
+    set time-for-crop-loss 0
+    set time-for-crop-loss 0
     set latent-period-duration 0
     set adult-occupation 0
     set duration-before-eggs 0
@@ -213,6 +217,8 @@ to write-totals-output-file
   file-type " "
   file-type target-for-agregation
   file-type " "
+  file-type init-nb-adults
+  file-type " "
   ; time
   file-type year
   file-type " "
@@ -238,13 +244,13 @@ end
 
 to write-distribution-infection-tick
   file-open distribution-infection-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " year " " ticks " " "infection" " " pxcor " " pycor)
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " "infection" " " pxcor " " pycor)
   file-close
 end
 
 to write-distribution-arrival-tick
   file-open distribution-arrival-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " year " " ticks " " "arrival" " " pxcor " " pycor " " time-since-infection)
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " "arrival" " " pxcor " " pycor " " time-since-infection " " time-for-crop-loss)
   file-close
 end
 
@@ -257,7 +263,20 @@ end
 to write-map-service-indicator
   file-open map-service-indicator-file-name
   ask patches
-  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " year " " ticks " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " crop-loss " " crop-save)]
+  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " crop-loss " " crop-save)]
+  file-close
+end
+
+;;; time-for-crop-loss
+
+to create-time-for-crop-loss
+  set time-for-crop-loss-file-name (word "time-for-crop-loss-" infection-rate "-" output-file-name)
+end
+
+to write-time-for-crop-loss
+  file-open time-for-crop-loss-file-name
+  ask patches with [land-cover = 1]
+  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " time-for-crop-loss)]
   file-close
 end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -280,11 +299,8 @@ to setup
   create-distribution-infection-file
   create-distribution-arrival-file
   create-map-service-indicator
+  create-time-for-crop-loss
 end
-
-;to-report survival? [ num ] ; num = 1 - proba-mortality
-;  report (random-float 1 < num) ; proba faible => True
-;end
 
 to go
 
@@ -317,6 +333,8 @@ to go
   [
     update-crop-loss-and-crop-save-end-season
 
+    show "test"
+
     flee
 
     ;;; update
@@ -344,6 +362,7 @@ to go
     write-output-file-tick
     write-map-service-indicator
     write-totals-output-file
+    write-time-for-crop-loss
 
     ;;; update season n -> season n+1
     transition-between-years
@@ -387,7 +406,7 @@ INPUTBOX
 177
 70
 init-nb-adults
-100.0
+0.0
 1
 0
 Number
@@ -398,7 +417,7 @@ INPUTBOX
 652
 275
 infection-rate
-15.0
+50.0
 1
 0
 Number
@@ -427,7 +446,7 @@ BUTTON
 92
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -443,7 +462,7 @@ INPUTBOX
 652
 76
 proportion-of-SNH-patches
-90.0
+0.0
 1
 0
 Number
@@ -522,7 +541,7 @@ PLOT
 176
 1407
 326
-crop-save
+crop-loss of 1 patch
 NIL
 NIL
 0.0
@@ -533,7 +552,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot sum [crop-save] of patches"
+"default" 1.0 0 -16777216 true "" "plot [crop-loss] of patch -15 7"
 
 INPUTBOX
 491
@@ -541,7 +560,7 @@ INPUTBOX
 652
 343
 nb-years
-10.0
+5.0
 1
 0
 Number
@@ -573,7 +592,7 @@ PLOT
 339
 1407
 489
-plot 1
+crop-loss
 NIL
 NIL
 0.0
@@ -584,7 +603,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count patches with [land-cover = 1 and state != 0]"
+"default" 1.0 0 -16777216 true "" "plot sum [crop-loss] of patches with [land-cover = 1]"
 
 INPUTBOX
 14
@@ -592,7 +611,7 @@ INPUTBOX
 175
 170
 proba-mortality
-6.0E-4
+0.025
 1
 0
 Number
@@ -1014,7 +1033,7 @@ NetLogo 6.0.2
       <value value="6.0E-4"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-birth-juvenile-predators">
-      <value value="0.75"/>
+      <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-overwintering">
       <value value="1"/>
@@ -1050,6 +1069,48 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
       <value value="&quot;exp8&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="experiment-time-for-crop-loss" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="1"/>
+      <value value="5"/>
+      <value value="10"/>
+      <value value="15"/>
+      <value value="20"/>
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-overwintering">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;exp10&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-mortality">
+      <value value="0.025"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-nb-adults" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="100"/>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

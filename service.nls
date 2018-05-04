@@ -10,6 +10,7 @@ globals
 to update-crop-loss-and-crop-save-transition-crop-patch-4-to-0
   ; compute crop-loss = total crop-loss of the patch after successive cycles of SIS
   let duration-without-predators (((age - adult-occupation - juvenile-occupation) - infection-date) - 5) ; 1st - 2nd - 5 -> 1st = t arrival of adults, 2nd = t infection, - 5 = minimal latent period for a patch
+  
   let regulation-rate exp(- gamma-regulation-rate * (duration-without-predators / length-season))
   
   let max-th-crop-loss 0.6 * exp(- gamma-without-CBC * (infection-date / length-season)) + 0.05
@@ -56,3 +57,25 @@ to update-crop-loss-and-crop-save-end-season
     set crop-save (crop-save + delta)
   ]
 end
+
+; ex 
+; infection-date 12
+; tick 36
+; adult-occupation 7
+; juvenile-occupation 10
+; juv + adult = 17 => 36-17 = 19 (arrival of predators)
+; latent = 6 => 12 + 6 = 18 => 19-18 = 1 (duration witouht pred)
+; regulation-rate 0.9597356097887026
+; max 0.4164127345837255
+; difference 0.36641273458372553
+; (0.4164127345837255 - (0.36641273458372553 * 0.9597356097887026)) = crop-loss = 0.06475338532366764
+
+; 0.07891273458372555
+
+; ex 
+; duration = (((age - adult-occupation - juvenile-occupation) - infection-date) - 5) = 56 - 6 - 18 - 24 - 5 = 3
+; reg rate = exp(- gamma-regulation-rate * (3 / length-season)) = 0.884005215243613 (4) 0.8484112843082221
+; max th crop loss = 0.6 * exp(- gamma-without-CBC * (infection-date / length-season)) + 0.05 = 0.2737638201085395
+; difference = max - min = 0.2737638201085395 - 0.05 = 0.2237638201085395
+; crop-loss = (max-th-crop-loss - (difference * regulation-rate)) = 0.2737638201085395 - (0.2237638201085395 * 0.884005215243613) = 0.07595543614975694 (4) 0.08392007010853952
+; real = 0.07595543614975694

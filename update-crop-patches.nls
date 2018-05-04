@@ -15,6 +15,7 @@ to update-crop-patches
   ask patches with [land-cover = 1 and state = 1]
   [
     set time-since-infection time-since-infection + 1
+    set time-for-crop-loss time-for-crop-loss + 1
     if time-since-infection = latent-period-duration [set next-state 2]
   ]
 
@@ -22,7 +23,8 @@ to update-crop-patches
 
   ask patches with [land-cover = 1 and state = 2 and predator-presence = FALSE]
   [
-    set time-since-infection time-since-infection + 1 ; utilité ?
+    set time-since-infection time-since-infection + 1 ; utilité ? ; var
+    set time-for-crop-loss time-for-crop-loss + 1
   ]
 
   ask patches with [land-cover = 1 and state = 2 and predator-presence = TRUE]
@@ -128,14 +130,14 @@ to transitions-between-states-for-crop-patches
     
     ; update state and attributes
     set state 0
-    set infection-date false
-    set time-since-infection 0
-    set latent-period-duration 0
-    set adult-occupation 0
-    set duration-before-eggs 0
-    set juvenile-occupation 0
-    set duration-juvenile-occupation 0
-    set first-adult-predator-arrived -1 ; reinitialization
+    ;set infection-date false
+    ;set time-since-infection 0
+    ;set latent-period-duration 0
+    ;set adult-occupation 0
+    ;set duration-before-eggs 0
+    ;set juvenile-occupation 0
+    ;set duration-juvenile-occupation 0
+    ;set first-adult-predator-arrived -1 ; reinitialization
     
     ; convert the juvenile turtle into an adult turtle
     ask juvenile-predators-here [die]
@@ -156,7 +158,7 @@ end
 
 to pattern-infection
   
-  if (ticks mod 3) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
+  if (ticks mod 1) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
   [
     ; each tick, a certain number of sane patches are infected
     ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
