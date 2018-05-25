@@ -108,7 +108,7 @@ to foraging-pattern
 end
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; flee
 
 to flee
   
@@ -186,7 +186,7 @@ to flee-pattern
   ]  
 end
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; hibernation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; overwintering
 
 ;;; overwintering
 ; all juveniles die because they are in crop patches

@@ -64,7 +64,6 @@ patches-own
   total-crop-loss-for-a-season ; sum of the crop-loss cycle after cycle for one season
   crop-loss-1st-infection ; crop-loss without control (th. max) for the 1st cycle of infection
 
-  ; crop-loss ; = Sum(crop-loss-r) + at the end crop-loss of the last cycle of infection
   ; crop-save ; for a cycle SIS = difference between crop-loss-r and crop-loss-max
 ]
 
@@ -108,7 +107,6 @@ to initiate-patches
     set infection-date FALSE
     set time-since-infection 0
     set time-for-crop-loss 0
-    set time-for-crop-loss 0
     set latent-period-duration 0
     set adult-occupation 0
     set duration-before-eggs 0
@@ -123,9 +121,6 @@ to initiate-patches
 
     set total-crop-loss-for-a-season 0
     set crop-loss-1st-infection 0
-
-    ; set crop-loss 0
-    ; set crop-save 0
  ]
 end
 
@@ -144,10 +139,12 @@ to initiate-adult-predators
   ]
 end
 
-to initiate-parameters-services
+to initiate-parameters
+   ;;; parameters for dynamics
+  set infection-pattern-frequency 1
+
+  ;;; parameters for service
   set gamma-without-CBC (- ln(0.75) / (7 / 180))
-  ; set gamma-with-CBC 5
-  ; set gamma-regulation-rate (ln (7 / length-season) / ln(1 - 60 / 100))
   set gamma-regulation-rate (- ln(0.75) / (7 / 180))
 end
 
@@ -193,8 +190,6 @@ to write-output-file-tick
   file-type " "
   file-type proba-birth-juvenile-predators
   file-type " "
-  ;file-type proba-to-reach-SNH
-  ;file-type " "
   ; time
   file-type year
   file-type " "
@@ -203,11 +198,15 @@ to write-output-file-tick
   ; expl. var.
   file-type count patches with [visit-counter > 0] ; nombre de patchs qui ont reçu au moins 1 visite, quelque soit le land-cover
   file-type " "
+  file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0] ; nb. of patches never infected
+  file-type " "
   file-type count patches with [land-cover = 1 and state != 0] ; dynamic of pests: nb of patches with infected status per tick
   file-type " "
   file-type count patches with [land-cover = 1 and (state = 1 or state = 2)] ; dynamic of pests: nb of patches infected and non-occupied, per tick
   file-type " "
   file-type count patches with [land-cover = 1 and (state = 3 or state = 4)] ; dynamic of pests: nb of patches infected and occupied, per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation > 0] ; nb. of patches infected and then cured
   file-type " "
   file-type count adult-predators ; dynamic of adult-predators
   file-type " "
@@ -224,29 +223,7 @@ to create-totals-output-file ; create a unique name for output file
   set totals-output-file-name (word "totals-" output-file-name)
 end
 
-;to write-totals-output-file
-;  file-open totals-output-file-name
-;  ; init. params
-;  file-type infection-rate
-;  file-type " "
-;  file-type proportion-of-SNH-patches
-;  file-type " "
-;  file-type target-for-agregation
-;  file-type " "
-;  file-type init-nb-adults
-;  file-type " "
-;  ; time
-;  file-type year
-;  file-type " "
-;  ; sums for total landscape
-;  file-type sum [crop-loss-1st-infection] of patches ; theoretical loss at the end of the year without any regulation
-;  file-type " "
-;  file-type sum [crop-loss] of patches ; crop-loss per patch at the end of the season
-;  file-type " "
-;  file-type sum [crop-save] of patches ; crop-save (avoided crop-loss per cycle of infection-curation) per patch
-;  file-type "\n" ; retour-chariot
-;  file-close
-;end
+
 
 to write-totals-output-file
   file-open totals-output-file-name
@@ -323,13 +300,13 @@ to setup
 
   landscape-design
   initiate-adult-predators
-  initiate-parameters-services
+  initiate-parameters
 
   set length-simulation nb-years * length-season
   set date 0
   set year 1
 
-  set infection-pattern-frequency 1
+
 
   ; set-current-directory (word "/home/antoine/Documents/Git/Biological-Control/results/" folder-path)
   set-current-directory (word "/home/antoine/Documents/Git/Biological-Control/biocontrolanalysis/data/" folder-path)
@@ -357,7 +334,7 @@ to go
     ; do adult predators survive to natural mortality? N -> die / Y -> forage
     ask adult-predators [forage]
 
-    ;;; write-output-file
+    ;;; write-output-files for t = date < date-to-flee
     write-output-file-tick
 
 
@@ -367,22 +344,19 @@ to go
 
   if date = date-to-flee
   [
-    ; update-crop-loss-and-crop-save-end-season
 
+    ;;; update crop patches attributes
     update-crop-loss-end-season ; good one
-
     update-landscape-total-crop-loss-for-a-season ; good one
 
-    show "test"
-
+    ;;; predators -> flee
     flee
+
+    ;;; write-output-files for t = date-to-flee
+    write-output-file-tick
 
     ;;; update
     set date date + (length-season - date-to-flee)
-
-    ;;; write-output-file
-    write-output-file-tick
-
     tick-advance (length-season - date-to-flee)
    ]
 
@@ -391,6 +365,7 @@ to go
 
   if date = length-season
   [
+    ;;; predators -> overwintering
     overwintering
 
     ;;; numeric outputs
@@ -398,7 +373,7 @@ to go
     ; output-print sum [crop-loss-1st-infection] of patches
     ; output-print sum [crop-loss] of patches
 
-    ;;; write-output-file
+    ;;; write-output-files for t = length-season
     write-output-file-tick
     write-map-service-indicator
     write-totals-output-file
@@ -446,7 +421,7 @@ INPUTBOX
 177
 70
 init-nb-adults
-5.0
+20.0
 1
 0
 Number
@@ -457,7 +432,7 @@ INPUTBOX
 652
 275
 infection-rate
-50.0
+10.0
 1
 0
 Number
@@ -502,7 +477,7 @@ INPUTBOX
 652
 76
 proportion-of-SNH-patches
-10.0
+80.0
 1
 0
 Number
@@ -644,7 +619,7 @@ INPUTBOX
 1027
 511
 folder-path
-exp-crop-loss2
+exp25mai
 1
 0
 String
@@ -1074,12 +1049,7 @@ NetLogo 6.0.2
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
-      <value value="1"/>
-      <value value="5"/>
-      <value value="10"/>
-      <value value="15"/>
-      <value value="20"/>
-      <value value="50"/>
+      <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="date-to-flee">
       <value value="150"/>
@@ -1091,7 +1061,42 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;exp-crop-loss&quot;"/>
+      <value value="&quot;exp-crop-loss/control-inf-rate&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-mortality">
+      <value value="0.025"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-nb-adults" first="0" step="5" last="20"/>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="100"/>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="exp25mai" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="infection-rate" first="0" step="2" last="10"/>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-overwintering">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;exp25mai&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>

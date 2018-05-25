@@ -1,7 +1,7 @@
 globals 
 [
   average-green-green-neighbors
-  while-counter-ld
+  while-counter-ld ; counter of patches permutations to target agregation
 ]
 
 ; initiate a landscape grid according to the parameters of composition (number-of-SNH-patches) and configuration (target-for-agregation)
@@ -28,7 +28,7 @@ to landscape-design
   
     set while-counter-ld 0
   
-    while [(abs(average-green-green-neighbors - target-for-agregation) > accuracy-threshold) = TRUE AND (while-counter-ld < 500) = TRUE]
+    while [(abs(average-green-green-neighbors - target-for-agregation) > accuracy-threshold) = TRUE AND (while-counter-ld < 250) = TRUE]
     [
       ; show average-green-green-neighbors
     
@@ -164,7 +164,7 @@ end
 
 to computation-of-proximity-with-SNH
 
-  ; les patchs SNH s'attribuent eux-mêmes leurs propres coordonnées et distances
+  ; SNH patches give themselves their own coordinates and distances
   ask patches with [land-cover = 0]
   [
     set closer-SNH-distance 0
@@ -172,7 +172,7 @@ to computation-of-proximity-with-SNH
     set y-closer-SNH [pycor] of self
   ]
 
-  ; les patchs SNH attribuent à leurs voisins deux choses : 1) une distance au plus proche SNH égale à 1, 2) leurs coodonnées de + proche SNH
+  ; SNH patches give to their crop neighbors : 1) closer-SNH-distance = 1, and 2) their own coordinates (= coordinates of the closer SNH)
   ask patches with [land-cover = 0]
   [
     let x-closer-SNH-start pxcor
@@ -188,8 +188,9 @@ to computation-of-proximity-with-SNH
     ]
   ]
 
-  ; ensuite de proche en proche, les patchs de crops attribuent à leurs voisins une distance au plus proche SNH incrémentée selon les passages dans la boucle
-  ; ainsi que les coordonnées du SNH le + proche
+  ; updated crop patches ask their not updated crop neighbors and give them : 
+  ; 1) closer-SNH-distance of self + 1, 
+  ; and 2) their own coordinates (= coordinates of the closer SNH)
   while [any? patches with [closer-SNH-distance = 0 and land-cover = 1]]
   [
     ask patches with [closer-SNH-distance != 0]
