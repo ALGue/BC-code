@@ -81,7 +81,7 @@ to transitions-between-states-for-crop-patches
     set latent-period-duration 6 + random 2 ; 6,7,8
     
     ; write distribution of infection events
-    write-distribution-infection-tick
+    write-inf-event-file
         
     ; if first infection, compute the value crop-loss-1st-infection = theoretical crop-loss without any regulation
     ;if crop-loss-1st-infection = 0
@@ -106,7 +106,7 @@ to transitions-between-states-for-crop-patches
     set duration-before-eggs 6 + random 2 ; 6,7,8
     
     ; write distribution of predators-arrival events
-    write-distribution-arrival-tick
+    write-pred-event-file
   ]
 
   ; occupied by adults -> occupied by juveniles
@@ -122,9 +122,8 @@ to transitions-between-states-for-crop-patches
   ; occupied by juveniles -> sane
   ask patches with [land-cover = 1 and state = 4 and next-state = 0]
   [
-    ; compute service (updated values of crop-loss and crop-save)
-    ; update-crop-loss-and-crop-save-transition-crop-patch-4-to-0
     
+    ; update crop patches attributes for regulation service    
     update-crop-loss-with-control-for-this-cycle-of-infection
     update-total-crop-loss-for-a-season
     
@@ -136,15 +135,25 @@ to transitions-between-states-for-crop-patches
     
     ; update state and attributes
     set state 0
-    ;set infection-date false
-    ;set time-since-infection 0
-    ;set latent-period-duration 0
-    ;set adult-occupation 0
-    ;set duration-before-eggs 0
-    ;set juvenile-occupation 0
-    ;set duration-juvenile-occupation 0
-    ;set first-adult-predator-arrived -1 ; reinitialization
+    set next-state 0
     
+    set predator-presence FALSE
+    set first-adult-predator-arrived FALSE
+
+    set infection-date FALSE
+    set time-since-infection 0
+    set time-for-crop-loss 0
+    set latent-period-duration 0
+    
+    set adult-occupation 0
+    set duration-before-eggs 0
+    
+    set juvenile-occupation 0
+    set duration-juvenile-occupation 0
+
+    set crop-loss-without-control-for-this-cycle-of-infection 0
+    set crop-loss-with-control-for-this-cycle-of-infection 0
+   
     ; convert the juvenile turtle into an adult turtle
     ask juvenile-predators-here [die]
     birth-adult-predators

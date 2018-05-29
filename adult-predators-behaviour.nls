@@ -31,16 +31,11 @@ to forage
   ]
 end
 
+;;; conditions (adult-predators unable to stay here)
+
 to-report I-cannot-stay-here 
   report SNH-patch OR crop-patch-state-0-1-4 OR crop-patch-state2-but-not-first OR crop-patch-state3-but-not-first OR crop-patch-state3-and-first-but-time-for-eggs
 end
-
-to-report can-I-still-fly?
-  report flight-capacity > 0
-end
-
-
-;;; conditions (adult-predators unable to stay here)
 
 ; SNH patch
 to-report SNH-patch
@@ -82,9 +77,6 @@ to foraging-pattern
     face more-infected-crop-patch-in-neighbors4 
     move-to more-infected-crop-patch-in-neighbors4 
     
-    ; update adult-predator agent
-    ;set flight-capacity flight-capacity - 1
-    
     ; update arrival-patch
     ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
   ] 
@@ -98,9 +90,6 @@ to foraging-pattern
     ; adult-predator agent moves to arrival-patch
     face p 
     move-to p 
-    
-    ; update adult-predator agent
-    ;set flight-capacity flight-capacity - 1
     
     ; update arrival-patch
     ask patch-here [set predator-presence TRUE]
@@ -132,15 +121,10 @@ to assign-flee-capacity
     sprout-adult-predators 1
     [
       set color blue
-      ;set flight-capacity max-flight-capacity
       set flee-capacity ((length-season - date-to-flee) - ([duration-juvenile-occupation] of patch-here - [juvenile-occupation] of patch-here))
     ]
   ]
 end
-
-; pb : lorsque l'on flee, certains patchs SNH contiennent déjà plusieurs adults
-; il faudrait enlever de flee pattern la condition "patch libre" pour rejoindre
-; et revenir à une condition overwintering où on élimine les pops en excès
 
 to flee-pattern
   
