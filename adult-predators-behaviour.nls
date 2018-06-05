@@ -26,8 +26,17 @@ to forage
         [foraging-pattern-2]
         ; N -> die
         [
-          if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] 
+          ; update death-counter
           set death-counter death-counter + 1
+          
+          ; update counter-foraging-movements-file
+          file-open counter-foraging-movements-file-name
+          file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " [counter-foraging-movements] of myself)
+          file-close
+          
+          ; update patch-here
+          if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]]
+          
           die
         ]
       ]
