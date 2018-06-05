@@ -1,4 +1,8 @@
-globals [nb-infected-visited-per-year]
+globals [
+  
+  nb-infected-visited-per-year
+  
+]
 
 to update-crop-patches
   
@@ -9,7 +13,8 @@ to update-crop-patches
   ; update age for all patches
   ask patches [set age date]
 
-  pattern-infection
+  ; possibility to choose three pattern-infection methods (see below)
+  pattern-infection-3
 
   ; update latent
   ask patches with [land-cover = 1 and state = 1]
@@ -171,6 +176,7 @@ end
 ; influence of SNH patches as sources of pests? => relation with the number of SNH patches?
 ; transition between years: is the infection-rate depends on the previous nb of infected patches?
 
+; à chaque tick, on infecte un nb. de crops égal à infection-rate : ex. si inf-rate = 4 alors 4 crops sont infectés à chaque tick
 to pattern-infection
   
   if (ticks mod infection-pattern-frequency) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
@@ -189,6 +195,72 @@ to pattern-infection
       ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
       ask n-of number-of-sane-patches-to-infect patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
     ] 
+  ]
+  
+end
+
+
+; à chaque tick, on infecte un % du stock de crops : ex. si inf-rate = 4, alors 4% du stock initial de crops est infecté à chaque tick
+to pattern-infection-2
+  
+  let nb-of-crop-patches-to-infect-at-each-tick precision (infection-rate / 100 * number-of-crop-patches) 0 ; precision => integer
+  
+  if (ticks mod infection-pattern-frequency) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
+  [
+    ; each tick, a certain number of sane patches are infected
+    ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+    let stock-of-sane-patches count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0]
+    ifelse stock-of-sane-patches > nb-of-crop-patches-to-infect-at-each-tick 
+    [
+      ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+      ask n-of nb-of-crop-patches-to-infect-at-each-tick patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+    ]
+    [
+      ; si le nb de crops pas encore infectés une seule fois est < au nb de patchs à infecter, on les infecte tous (la condition nb-cycles = 0 est importante alors pour ne pas compter les patchs soignés précédemment)
+      ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+      ask patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+    ] 
+  ]
+  
+end
+
+
+;;;;;;;;;;;;;;;;;;;;
+; => à checker, mais paraît ok
+
+; à la fin de la simulation, le nb de crops infectés correspond à inf-rate : 
+; ex. si inf-rate = 4, alors à la fin de la simulation 4% des crops ont été infectés (par rapport au stock inital de crops)
+to pattern-infection-3
+  
+  let final-nb-of-crop-patches-to-infect precision (infection-rate / 100 * number-of-crop-patches) 0
+  
+  ; 150 ticks -> final-nb-of-crop-patches-to-infect
+  ; 1 tick -> nb of crops to infect at each tick
+  
+  ; ceiling pour arrondir à l'entier supérieur (au cas où le nb de patchs à infecter à chaque tick est compris entre 0 et 1, et / ou décimal)
+  let nb-of-crop-patches-to-infect-at-each-tick ceiling (final-nb-of-crop-patches-to-infect / (date-to-flee / infection-pattern-frequency))
+  
+  if (ticks mod infection-pattern-frequency) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
+  [
+    ; comme on a potentiellement arrondi le nb de crops à infecter à chaque tick
+    ; on risque de dépasser le nb final de crops à infecter
+    ifelse (count patches with [land-cover = 1 and state != 0] + count patches with [state = 0 and nb-cycles-infection-curation > 0] + nb-of-crop-patches-to-infect-at-each-tick) < final-nb-of-crop-patches-to-infect
+    [
+      ; each tick, a certain number of sane patches are infected
+      ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+      let stock-of-sane-patches count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0]
+      ifelse stock-of-sane-patches > nb-of-crop-patches-to-infect-at-each-tick 
+      [
+        ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+        ask n-of nb-of-crop-patches-to-infect-at-each-tick patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+      ]
+      [
+        ; si le nb de crops pas encore infectés une seule fois est < au nb de patchs à infecter, on les infecte tous (la condition nb-cycles = 0 est importante alors pour ne pas compter les patchs soignés précédemment)
+        ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
+        ask patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]
+      ] 
+    ]
+    [ask n-of (final-nb-of-crop-patches-to-infect - (count patches with [land-cover = 1 and state != 0] + count patches with [state = 0 and nb-cycles-infection-curation > 0])) patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0][set next-state 1]]
   ]
   
 end

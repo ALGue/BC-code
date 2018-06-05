@@ -89,7 +89,7 @@ to birth-adult-predators
   sprout-adult-predators 1
   [
     set color blue
-    set date-for-first-foraging-movement min (list (random-poisson 4) 7) ; min entre value random poisson et date-limite de sortie
+    set date-for-first-foraging-movement min (list (random-poisson 20) 50) ; min entre value random poisson et date-limite de sortie
     set flee-capacity 0
   ]
   set predator-presence true ; assign to patch-here that there is an adult-predator on him
@@ -313,14 +313,14 @@ to go
 
   ]
 
-  ;;; Period 2: infection + flee
+  ;;; Period 2: update crop loss + flee
 
   if date = date-to-flee
   [
 
     ;;; update crop patches attributes
-    update-crop-loss-end-season ; good one
-    update-landscape-total-crop-loss-for-a-season ; good one
+    update-crop-loss-end-season
+    update-landscape-total-crop-loss-for-a-season
 
     ;;; predators -> flee
     flee
@@ -433,7 +433,7 @@ BUTTON
 92
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -449,7 +449,7 @@ INPUTBOX
 652
 76
 proportion-of-SNH-patches
-90.0
+10.0
 1
 0
 Number
@@ -591,7 +591,7 @@ INPUTBOX
 1027
 511
 folder-path
-inf-rate-4
+NIL
 1
 0
 String
@@ -1106,6 +1106,43 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
       <value value="&quot;inf-rate-4&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-mortality">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-nb-adults" first="0" step="5" last="10"/>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="inf-rate-4-sortieSNH" repetitions="10" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-overwintering">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;inf-rate-4-sortieSNH&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>

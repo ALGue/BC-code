@@ -2,6 +2,9 @@ globals
 [
   average-green-green-neighbors
   while-counter-ld ; counter of patches permutations to target agregation
+  
+  number-of-SNH-patches ; total number of SNH patches in the landscape
+  number-of-crop-patches ; total number of crop patches in the landscape
 ]
 
 ; initiate a landscape grid according to the parameters of composition (number-of-SNH-patches) and configuration (target-for-agregation)
@@ -16,7 +19,8 @@ to landscape-design
   
     ; value of number-of-SNH-patches according to proportion-of-SNH-patches
     let total-number-of-patches-on-the-grid count patches ; total nb of patches on the grid
-    let number-of-SNH-patches precision (total-number-of-patches-on-the-grid * proportion-of-SNH-patches / 100) 0 ; precision => integer
+    set number-of-SNH-patches precision (total-number-of-patches-on-the-grid * proportion-of-SNH-patches / 100) 0 ; precision => integer
+    set number-of-crop-patches (count patches - number-of-SNH-patches)
   
     ; random land-cover landscape, according to 'number-of-SNH-patches'
     ask patches [set land-cover 1]
