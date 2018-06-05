@@ -18,6 +18,7 @@ globals
   inf-event-file-name
   pred-event-file-name
   spatial-file-name
+  counter-foraging-movements-file-name
 
   death-counter
 
@@ -75,9 +76,11 @@ breed [adult-predators adult-predator]
 adult-predators-own
 [
   date-for-first-foraging-movement ; date that allows the adult-predator to forage
-  flight-capacity
   flee-capacity
   close?
+
+  ; output
+  counter-foraging-movements
 ]
 
 breed [juvenile-predators juvenile-predator]
@@ -88,9 +91,10 @@ breed [juvenile-predators juvenile-predator]
 to birth-adult-predators
   sprout-adult-predators 1
   [
-    set color blue
+    set color red
     set date-for-first-foraging-movement min (list (random-poisson 20) 50) ; min entre value random poisson et date-limite de sortie
     set flee-capacity 0
+    set counter-foraging-movements 0
   ]
   set predator-presence true ; assign to patch-here that there is an adult-predator on him
 end
@@ -154,13 +158,14 @@ end
 
 to initiate-file-names
   ;;; var. file-name (root)
-  set file-name (word (random 1000) "-" proportion-of-SNH-patches "-" target-for-agregation "-" infection-rate "-" init-nb-adults ".txt")
+  set file-name (word (random 1000) "-" proportion-of-SNH-patches "-" target-for-agregation "-" infection-rate "-" init-nb-adults "-" (random 1000)".txt")
   ;;; file names
   set tick-file-name (word "tick" "-" file-name)
   set end-season-file-name (word "end-season" "-" file-name)
   set inf-event-file-name (word "inf-event" "-" file-name)
   set pred-event-file-name (word "pred-event" "-" file-name)
   set spatial-file-name (word "spatial" "-" file-name)
+  set counter-foraging-movements-file-name (word "counter-foraging-movements" "-" file-name)
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -173,8 +178,8 @@ to transition-between-years
   ; update adult-predators
   ask adult-predators
   [
-    ; set flight-capacity max-flight-capacity
     set flee-capacity 0
+    set counter-foraging-movements 0
     ask patch-here [set predator-presence TRUE] ; check
   ]
 
@@ -272,6 +277,15 @@ to write-spatial-file
   file-close
 end
 
+;;; distribution of counter-foraging-movements
+
+to write-counter-foraging-movements-file
+  file-open counter-foraging-movements-file-name
+  ask adult-predators
+  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " counter-foraging-movements)]
+  file-close
+end
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 to setup
 
@@ -350,6 +364,7 @@ to go
     write-tick-file
     write-end-season-file
     write-spatial-file
+    write-counter-foraging-movements-file
 
     ;;; update season n -> season n+1
     transition-between-years

@@ -12,20 +12,26 @@
 to forage
   if date >= date-for-first-foraging-movement
   [
+    ; already on an attractive crop patch?
     if I-cannot-stay-here
+    ; move
     [
+      ; on crop?
       ifelse [land-cover] of patch-here = 1
-      ; on crop -> forage or die VS on SNH -> forage
+      ; on crop -> forage or die
       [
+        ; survival to movement?
         ifelse random-float 1 < (1 - proba-mortality)
-        ; forage or die
+        ; Y -> forage
         [foraging-pattern-2]
+        ; N -> die
         [
           if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] 
           set death-counter death-counter + 1
           die
         ]
       ]
+      ; not on crop -> on SNH -> forage without probability of mortality
       [foraging-pattern-2]
     ]
   ]
@@ -94,6 +100,8 @@ to foraging-pattern
     ; update arrival-patch
     ask patch-here [set predator-presence TRUE]
   ]
+  
+  set counter-foraging-movements counter-foraging-movements + 1
 end
 
 ;;; foraging-pattern-2
@@ -160,6 +168,8 @@ to foraging-pattern-2
       ask patch-here [set predator-presence TRUE]
     ]
   ]
+  
+  set counter-foraging-movements counter-foraging-movements + 1
   
 end
 
