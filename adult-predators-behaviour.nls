@@ -19,14 +19,14 @@ to forage
       [
         ifelse random-float 1 < (1 - proba-mortality)
         ; forage or die
-        [foraging-pattern]
+        [foraging-pattern-2]
         [
           if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] 
           set death-counter death-counter + 1
           die
         ]
       ]
-      [foraging-pattern]
+      [foraging-pattern-2]
     ]
   ]
 end
@@ -94,6 +94,73 @@ to foraging-pattern
     ; update arrival-patch
     ask patch-here [set predator-presence TRUE]
   ]
+end
+
+;;; foraging-pattern-2
+
+; on veut rendre les predators + intelligents
+; ils détectent mieux les crops infectés
+; ils ont un radius de distance variable, et lorsqu'il y a un crop infecté attractif dans ce radius, ils font un saut dans cette direction
+
+to foraging-pattern-2
+  
+  ; y a-t-il un patch attractif dans les 8 + proches voisins, si oui on va dessus, sinon on regarde + loin
+  ifelse any? patches in-radius 1.5 with [state = 2 and land-cover = 1]
+  ; oui -> on va dessus
+  [
+    ; choose arrival-patch
+    let more-infected-crop-patch-in-radius max-one-of patches in-radius 1.5 with [land-cover = 1 and state = 2] [time-since-infection] 
+    
+    ; update departure-patch
+    if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
+    
+    ; adult-predator agent moves to arrival-patch
+    face more-infected-crop-patch-in-radius 
+    move-to more-infected-crop-patch-in-radius
+    
+    ; update arrival-patch
+    ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
+  ]
+  ; non -> on élargit le radius
+  [
+    ; y a-t-il un patch attractif dans les 24 + proches voisins, si oui on va sur le patch le + proche dans radius 1.5, sinon mvt aléatoire in-radius 1.5
+    ifelse any? patches in-radius 2.9 with [state = 2 and land-cover = 1]
+    ; oui -> on va sur le patch in-radius 1.5 le + proche du patch attractif in-radius 2.9
+    [
+      ; choose directional-patch
+      let more-infected-crop-patch-in-radius max-one-of patches in-radius 2.9 with [land-cover = 1 and state = 2] [time-since-infection]
+     
+      ; choose arrival-patch
+      let arrival-patch min-one-of patches in-radius 1.5 [distance more-infected-crop-patch-in-radius]
+      
+      ; update departure-patch
+      if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
+    
+      ; adult-predator agent moves to arrival-patch
+      face arrival-patch
+      move-to arrival-patch
+    
+      ; update arrival-patch
+      ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
+      
+    ]
+    ; non -> mvt aléatoire in-radius 1.5
+    [
+      ; choose arrival-patch
+      let p one-of patches in-radius 1.5
+    
+      ; update departure-patch
+      if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
+    
+      ; adult-predator agent moves to arrival-patch
+      face p 
+      move-to p 
+    
+      ; update arrival-patch
+      ask patch-here [set predator-presence TRUE]
+    ]
+  ]
+  
 end
 
 

@@ -393,7 +393,7 @@ INPUTBOX
 177
 70
 init-nb-adults
-10.0
+1.0
 1
 0
 Number
@@ -580,7 +580,7 @@ INPUTBOX
 175
 170
 proba-mortality
-0.1
+1.0E-6
 1
 0
 Number

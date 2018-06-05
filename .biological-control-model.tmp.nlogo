@@ -313,14 +313,14 @@ to go
 
   ]
 
-  ;;; Period 2: infection + flee
+  ;;; Period 2: update crop loss + flee
 
   if date = date-to-flee
   [
 
     ;;; update crop patches attributes
     update-crop-loss-end-season
-    update-landscape-total-crop-loss-for-a-season ; good one
+    update-landscape-total-crop-loss-for-a-season
 
     ;;; predators -> flee
     flee
