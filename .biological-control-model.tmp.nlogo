@@ -92,7 +92,7 @@ to birth-adult-predators
   sprout-adult-predators 1
   [
     set color red
-    set date-for-first-foraging-movement min (list (random-poisson 20) 50) ; min entre value random poisson et date-limite de sortie
+    set date-for-first-foraging-movement 7; min (list (random-poisson 20) 50) ; min entre value random poisson et date-limite de sortie
     set flee-capacity 0
     set counter-foraging-movements 0
   ]
@@ -165,7 +165,7 @@ to initiate-file-names
   set inf-event-file-name (word "inf-event" "-" file-name)
   set pred-event-file-name (word "pred-event" "-" file-name)
   set spatial-file-name (word "spatial" "-" file-name)
-  set counter-foraging-movements-file-name (word "counter-foraging-movements" "-" file-name)
+  ;set counter-foraging-movements-file-name (word "counter-foraging-movements" "-" file-name)
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -279,12 +279,12 @@ end
 
 ;;; distribution of counter-foraging-movements
 
-to write-counter-foraging-movements-file
-  file-open counter-foraging-movements-file-name
-  ask adult-predators
-  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " counter-foraging-movements)]
-  file-close
-end
+;to write-counter-foraging-movements-file
+;  file-open counter-foraging-movements-file-name
+;  ask adult-predators
+;  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " counter-foraging-movements)]
+;  file-close
+;end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 to setup
@@ -364,6 +364,7 @@ to go
     write-tick-file
     write-end-season-file
     write-spatial-file
+    ;write-counter-foraging-movements-file
 
     ;;; update season n -> season n+1
     transition-between-years
@@ -407,7 +408,7 @@ INPUTBOX
 177
 70
 init-nb-adults
-1.0
+10.0
 1
 0
 Number
@@ -418,7 +419,7 @@ INPUTBOX
 652
 275
 infection-rate
-4.0
+20.0
 1
 0
 Number
@@ -594,7 +595,7 @@ INPUTBOX
 175
 170
 proba-mortality
-1.0E-6
+0.1
 1
 0
 Number
@@ -1100,14 +1101,14 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="inf-rate-4" repetitions="10" runMetricsEveryStep="true">
+  <experiment name="inf-rate-4" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="accuracy-threshold">
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
-      <value value="4"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="date-to-flee">
       <value value="150"/>
@@ -1119,7 +1120,7 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;inf-rate-4&quot;"/>
+      <value value="&quot;test&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>
@@ -1127,9 +1128,10 @@ NetLogo 6.0.2
     <enumeratedValueSet variable="proba-mortality">
       <value value="0.1"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="init-nb-adults" first="0" step="5" last="10"/>
+    <enumeratedValueSet variable="init-nb-adults">
+      <value value="10"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="target-for-agregation">
-      <value value="1"/>
       <value value="5"/>
     </enumeratedValueSet>
     <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
@@ -1157,6 +1159,93 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
       <value value="&quot;inf-rate-4-sortieSNH&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-mortality">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="init-nb-adults" first="0" step="5" last="10"/>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="exp0606" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="3"/>
+      <value value="5"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-overwintering">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;exp0606&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-mortality">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-nb-adults">
+      <value value="0"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="exp-2" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="1"/>
+      <value value="3"/>
+      <value value="5"/>
+      <value value="7"/>
+      <value value="10"/>
+      <value value="15"/>
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-overwintering">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;exp-2&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>

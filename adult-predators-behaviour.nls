@@ -23,16 +23,16 @@ to forage
         ; survival to movement?
         ifelse random-float 1 < (1 - proba-mortality)
         ; Y -> forage
-        [foraging-pattern-2]
+        [foraging-pattern]
         ; N -> die
         [
           ; update death-counter
           set death-counter death-counter + 1
           
           ; update counter-foraging-movements-file
-          file-open counter-foraging-movements-file-name
-          file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " [counter-foraging-movements] of myself)
-          file-close
+          ;file-open counter-foraging-movements-file-name
+          ;file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " [counter-foraging-movements] of myself)
+          ;file-close
           
           ; update patch-here
           if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]]
@@ -41,7 +41,7 @@ to forage
         ]
       ]
       ; not on crop -> on SNH -> forage without probability of mortality
-      [foraging-pattern-2]
+      [foraging-pattern]
     ]
   ]
 end
@@ -221,39 +221,52 @@ to flee-pattern
   ; if too far of a SNH -> die
   ask adult-predators with [ [land-cover] of patch-here = 1 and close? = false] [ die ]
   
-  ; if exogenous mortality should occur (during movement) -> die
-  ask adult-predators
-  [
-    ; create a n-list (n = nb of jumps to move to the SNH) of reporters (survival-probability) 
-    ; value-test reports if the n-list includes at least 1 "false" = death occurs at 1 of the jumps -> value-test = true if the n-list includes at least 1 false
-    let value-test (member? true n-values [closer-SNH-distance] of patch-here [random-float 1 > (1 - proba-mortality)]) 
-    
-    ; if death occured -> die  
-    if  value-test = true  [if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] die]
-  ]
+;  ; if exogenous mortality should occur (during movement) -> die
+;  ask adult-predators
+;  [
+;    ; create a n-list (n = nb of jumps to move to the SNH) of reporters (survival-probability) 
+;    ; value-test reports if the n-list includes at least 1 "false" = death occurs at 1 of the jumps -> value-test = true if the n-list includes at least 1 false
+;    let value-test (member? true n-values [closer-SNH-distance] of patch-here [random-float 1 > (1 - proba-mortality)]) 
+;    
+;    ; if death occured -> die  
+;    if  value-test = true  [if count adult-predators-here = 1 [ask patch-here [set predator-presence FALSE]] die]
+;  ]
   
-  ; for adult survivors (close to a SNH and no exogenous mortality) -> if at least 1 free patch of the closer SNH cluster, sprout a new adult on it and die, otherwise die
-  ; equivalent to "move to SNH cluster, on a free patch, or die if the cluster is already full of adults"
+;  ; for adult survivors (close to a SNH and no exogenous mortality) -> if at least 1 free patch of the closer SNH cluster, sprout a new adult on it and die, otherwise die
+;  ; equivalent to "move to SNH cluster, on a free patch, or die if the cluster is already full of adults"
+;  ask adult-predators with [ [land-cover] of patch-here = 1 and close? = TRUE ]
+;  [
+;    ; define the arrival SNH cluster (plabel)
+;    let x [x-closer-SNH] of patch-here
+;    let y [y-closer-SNH] of patch-here
+;    let arrival-SNHcluster-label [plabel] of patch x y 
+;        
+;    ; does the arrival SNH cluster still contain at least 1 free patch? Y -> sprout an adult on this patch in priority/ N -> sprout an adult randomly on one patch of the cluster
+;    let nb-vacant-patches count patches with [plabel = arrival-SNHcluster-label and predator-presence = false]
+;    ifelse nb-vacant-patches > 0
+;    [ask one-of patches with [plabel = arrival-SNHcluster-label and predator-presence = false][birth-adult-predators set predator-presence true]]
+;    [ask one-of patches with [plabel = arrival-SNHcluster-label][birth-adult-predators set predator-presence true]]
+;    
+;    ; update the departure patch and kill the adult-predator on the departure patch
+;    ask patch-here [set predator-presence false]
+;    die
+;]
+  
+  ; for adult survivors -> go to the closest SNH patch
   ask adult-predators with [ [land-cover] of patch-here = 1 and close? = TRUE ]
   [
     ; define the arrival SNH cluster (plabel)
     let x [x-closer-SNH] of patch-here
     let y [y-closer-SNH] of patch-here
-    let arrival-SNHcluster-label [plabel] of patch x y 
-        
-    ; does the arrival SNH cluster still contain at least 1 free patch? Y -> sprout an adult on this patch in priority/ N -> sprout an adult randomly on one patch of the cluster
-    let nb-vacant-patches count patches with [plabel = arrival-SNHcluster-label and predator-presence = false]
-    ifelse nb-vacant-patches > 0
-    [ask one-of patches with [plabel = arrival-SNHcluster-label and predator-presence = false][birth-adult-predators set predator-presence true]]
-    [ask one-of patches with [plabel = arrival-SNHcluster-label][birth-adult-predators set predator-presence true]]
     
-    ; update the departure patch
+    ; birth of a predator on the closest SNH patch
+    ask patch x y [birth-adult-predators set predator-presence true]
+    
+    ; update the departure patch and kill the adult-predator on the departure patch
     ask patch-here [set predator-presence false]
-    
-    ; kill the adult-predator on the departure patch
     die
-    
-  ]  
+  ]
+  
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; overwintering
@@ -268,20 +281,35 @@ to overwintering
   ;;; juveniles can not do overwintering
   ask juvenile-predators [die]
   
-  ;;; excessive adults in clusters die randomly
-  ask patches with [land-cover = 0 and count adult-predators-here > 1]
-  [
-    let nb-adults-here count adult-predators-here
-    ask n-of (nb-adults-here - 1) adult-predators-here [die]
-  ]
-  
   ;;; overwintering of adults
   adult-overwintering-pattern
 
 end
 
 to adult-overwintering-pattern
-  ask adult-predators [ if (random-float 1 > proba-overwintering) [die] ]
+  
+;  ;;; excessive adults in clusters die randomly
+;  ask patches with [land-cover = 0 and count adult-predators-here > 1]
+;  [
+;    let nb-adults-here count adult-predators-here
+;    ask n-of (nb-adults-here - 1) adult-predators-here [die]
+;  ]
+;  ;;; probability to survive
+;  ask adult-predators [ if (random-float 1 > proba-overwintering) [die] ]
+  
+  ; on interroge les patchs avec + d'1 pred dessus
+  ask patches with [(land-cover = 0) and (count adult-predators-here > 1)]
+  [
+    ; on conserve le nb - 1 de préds abrités
+    let var1 count adult-predators-here - 1
+    ; kill tous les préds. sur ce patch sauf 1
+    ask n-of var1 adult-predators-here [die]
+    
+    ; on demande aux patchs avec le same plabel et sans préds d'en prendre 1
+    ask patches with [(plabel = [plabel] of myself) and (count adult-predators-here = 0)][birth-adult-predators set predator-presence true]
+  ]
+  
+
 end
 
 
