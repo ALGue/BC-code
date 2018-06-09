@@ -83,7 +83,7 @@ to transitions-between-states-for-crop-patches
     set state 1
     set infection-date age
     set time-since-infection 0
-    set latent-period-duration 6 + random 2 ; 6,7,8
+    set latent-period-duration 6 ;+ random 2 ; 6,7,8
     
     ; write distribution of infection events
     write-inf-event-file
@@ -108,7 +108,7 @@ to transitions-between-states-for-crop-patches
     ; update state and assign attributes
     set state 3
     set adult-occupation 0
-    set duration-before-eggs 6 + random 2 ; 6,7,8
+    set duration-before-eggs 6 ;+ random 2 ; 6,7,8
     
     ; write distribution of predators-arrival events
     write-pred-event-file
@@ -121,7 +121,7 @@ to transitions-between-states-for-crop-patches
     set state 4
     birth-juvenile-predators
     set juvenile-occupation 0
-    set duration-juvenile-occupation 15 + random 6
+    set duration-juvenile-occupation 15 ;+ random 6
   ]
 
   ; occupied by juveniles -> sane

@@ -1,5 +1,3 @@
-;; je fais un test branch
-;; 0.025
 
 
 globals
@@ -19,6 +17,7 @@ globals
   pred-event-file-name
   spatial-file-name
   counter-foraging-movements-file-name
+  test-file-name
 
   death-counter
 
@@ -78,6 +77,9 @@ adult-predators-own
   date-for-first-foraging-movement ; date that allows the adult-predator to forage
   flee-capacity
   close?
+
+  ; ?
+  date-to-flee-for-this-adult
 
   ; output
   counter-foraging-movements
@@ -151,6 +153,8 @@ to initiate-parameters
    ;;; parameters for dynamics
   set infection-pattern-frequency 1
 
+  set store-nb-adults-born 0
+
   ;;; parameters for service
   set gamma-without-CBC (- ln(0.75) / (7 / 180))
   set gamma-regulation-rate (- ln(0.75) / (7 / 180))
@@ -165,6 +169,7 @@ to initiate-file-names
   set inf-event-file-name (word "inf-event" "-" file-name)
   set pred-event-file-name (word "pred-event" "-" file-name)
   set spatial-file-name (word "spatial" "-" file-name)
+  set test-file-name (word "test" "-" file-name)
   ;set counter-foraging-movements-file-name (word "counter-foraging-movements" "-" file-name)
 end
 
@@ -311,10 +316,19 @@ to go
 
   if  date < date-to-flee
   [
-    tick
+
+    ;;; write-output-files after overwintering
+    ;write-tick-file
+    file-open test-file-name
+    file-print (word year " " ticks " " date " " "step1" " " count adult-predators)
+    file-close
+
+    ;tick
 
     ; set date date + 1
-    set date ticks mod 180
+    ; set date ticks mod 180
+    set date date + 1
+    tick
 
     update-crop-patches
 
@@ -322,7 +336,10 @@ to go
     ask adult-predators [forage]
 
     ;;; write-tick-file for t = date < date-to-flee
-    write-tick-file
+    ;write-tick-file
+    ; file-open test-file-name
+    ; file-print (word year " " ticks " " date " " "step1" " " count adult-predators)
+    ; file-close
 
 
   ]
@@ -340,20 +357,25 @@ to go
     flee
 
     ;;; write-tick-file for t = date-to-flee
-    write-tick-file
+    ; write-tick-file
+    ;file-open test-file-name
+    ;file-print (word year " " ticks " " date " " "step2" " " count adult-predators)
+    ;file-close
 
     ;;; update
-    set date date + (length-season - date-to-flee)
-    tick-advance (length-season - date-to-flee)
+    set date date + ((length-season - 1) - date-to-flee)
+    tick-advance ((length-season - 1) - date-to-flee)
    ]
 
 
   ;;; Period 3: overwintering + transition-between-years
 
-  if date = length-season
+  if date = (length-season - 1)
   [
+    set date length-season
+    tick
     ;;; predators -> overwintering
-    overwintering
+    ;overwintering
 
     ;;; numeric outputs
     ; output-print year
@@ -361,15 +383,23 @@ to go
     ; output-print sum [crop-loss] of patches
 
     ;;; write-output-files for t = length-season
-    write-tick-file
-    write-end-season-file
-    write-spatial-file
+    ;write-tick-file
+    ;write-end-season-file
+    ;write-spatial-file
     ;write-counter-foraging-movements-file
+    file-open test-file-name
+    file-print (word year " " ticks " " date " " "step3" " " count adult-predators)
+    file-close
 
     ;;; update season n -> season n+1
     transition-between-years
     set year year + 1
     set date 0
+
+    ;;; predators -> overwintering
+    overwintering
+
+
   ]
 
   if ticks >= length-simulation [stop]
@@ -448,7 +478,7 @@ BUTTON
 92
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -606,7 +636,7 @@ INPUTBOX
 1027
 511
 folder-path
-NIL
+test
 1
 0
 String
@@ -1108,19 +1138,20 @@ NetLogo 6.0.2
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
+      <value value="4"/>
       <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="date-to-flee">
       <value value="150"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="nb-years">
-      <value value="5"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-overwintering">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;test&quot;"/>
+      <value value="&quot;test2&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>
