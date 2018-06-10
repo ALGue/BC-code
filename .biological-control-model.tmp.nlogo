@@ -1,5 +1,4 @@
 
-
 globals
 [
   date
@@ -312,28 +311,51 @@ end
 
 to go
 
-  ;;; Period 1: infection + foraging
 
-  if  date < date-to-flee
+  if date = 0
   [
+    transition-between-years
 
-    ;;; write-output-files after overwintering
-    ;write-tick-file
     file-open test-file-name
-    file-print (word year " " ticks " " date " " "step1" " " count adult-predators)
+    file-print (word year " " ticks " " date " " "transition" " " count adult-predators)
     file-close
 
-    ;tick
+    tick
+    set date date + 1
+
+    ;;; predators -> overwintering
+
+
+
+  ]
+
+  ;;; Period 1: infection + foraging
+
+  if 0 < date and date < date-to-flee
+  [
+    update-crop-patches
+    ask adult-predators [forage]
+
+    file-open test-file-name
+    file-print (word year " " ticks " " date " " "forage" " " count adult-predators)
+    file-close
+
+
+    tick
+    set date date + 1
 
     ; set date date + 1
     ; set date ticks mod 180
-    set date date + 1
-    tick
 
-    update-crop-patches
+    ; tick
+
+    ; update-crop-patches
 
     ; do adult predators survive to natural mortality? N -> die / Y -> forage
-    ask adult-predators [forage]
+    ; ask adult-predators [forage]
+
+    ;;; write-output-files after overwintering
+
 
     ;;; write-tick-file for t = date < date-to-flee
     ;write-tick-file
@@ -348,13 +370,17 @@ to go
 
   if date = date-to-flee
   [
+    ;;; predators -> flee
+    flee
+
+    set date date + ((length-season - date-to-flee) + 1
+    tick-advance ((length-season - date-to-flee) + 1)
 
     ;;; update crop patches attributes
     update-crop-loss-end-season
     update-landscape-total-crop-loss-for-a-season
 
-    ;;; predators -> flee
-    flee
+
 
     ;;; write-tick-file for t = date-to-flee
     ; write-tick-file
@@ -363,17 +389,22 @@ to go
     ;file-close
 
     ;;; update
-    set date date + ((length-season - 1) - date-to-flee)
-    tick-advance ((length-season - 1) - date-to-flee)
+
    ]
 
 
   ;;; Period 3: overwintering + transition-between-years
 
-  if date = (length-season
+  if date = (length-season - 1)
   [
-    set date length-season
-    tick
+    overwintering
+
+    file-open test-file-name
+    file-print (word year " " ticks " " date " " "overwintering" " " count adult-predators)
+    file-close
+
+    ;set date length-season
+    ;tick
     ;;; predators -> overwintering
     ;overwintering
 
@@ -387,20 +418,16 @@ to go
     ;write-end-season-file
     ;write-spatial-file
     ;write-counter-foraging-movements-file
-    file-open test-file-name
-    file-print (word year " " ticks " " date " " "step3" " " count adult-predators)
-    file-close
+
 
     ;;; update season n -> season n+1
-    transition-between-years
     set year year + 1
     set date 0
-
-    ;;; predators -> overwintering
-    overwintering
+    tick
 
 
   ]
+
 
   if ticks >= length-simulation [stop]
 end

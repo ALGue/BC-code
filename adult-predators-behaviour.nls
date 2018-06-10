@@ -255,13 +255,13 @@ to assign-flee-capacity
   ask adult-predators
   [set close? ([closer-SNH-distance] of patch-here < flee-capacity)]
   
-  set date-list n-values 30 [i -> date-to-flee + i] ; jusqu'à 179
+  set date-list n-values (length-season - date-to-flee) [i -> date-to-flee + i] ; jusqu'à 179
   ; foreach date-list [x -> show (count adult-predators with [flee-capacity = x])] 
   foreach date-list 
   [
     x -> (set store-nb-adults (store-nb-adults + count adult-predators with [date-to-flee-for-this-adult = x and close? = true])) 
     file-open test-file-name 
-    file-print (word  year " " ticks " " x " " "step2" " " store-nb-adults) 
+    file-print (word  year " " ticks " " x " " "flee" " " store-nb-adults) 
     file-close
   ]
     
