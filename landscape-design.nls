@@ -21,6 +21,8 @@ to landscape-design
     let total-number-of-patches-on-the-grid count patches ; total nb of patches on the grid
     set number-of-SNH-patches precision (total-number-of-patches-on-the-grid * proportion-of-SNH-patches / 100) 0 ; precision => integer
     set number-of-crop-patches (count patches - number-of-SNH-patches)
+   
+    
   
     ; random land-cover landscape, according to 'number-of-SNH-patches'
     ask patches [set land-cover 1]
@@ -82,7 +84,7 @@ to landscape-design
     
     
     ; initiate attributes of patches
-    initiate-patches
+    ; initiate-patches
     
     ; identify SNH clusters and label them
     find-clusters
@@ -95,7 +97,7 @@ to landscape-design
   [
     ask patches [set land-cover 1]
     color-patches
-    initiate-patches
+    set number-of-crop-patches (count patches)
   ]
   
 end

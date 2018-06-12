@@ -14,7 +14,7 @@ to update-crop-patches
   ask patches [set age date]
 
   ; possibility to choose three pattern-infection methods (see below)
-  pattern-infection
+  pattern-infection-2
 
   ; update latent
   ask patches with [land-cover = 1 and state = 1]

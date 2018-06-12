@@ -33,7 +33,7 @@ to forage
         ; survival to movement?
         ifelse random-float 1 < (1 - proba-mortality)
         ; Y -> forage
-        [foraging-pattern]
+        [foraging-pattern-2]
         ; N -> die
         [
           ; update death-counter
@@ -260,9 +260,48 @@ to assign-flee-capacity
   foreach date-list 
   [
     x -> (set store-nb-adults (store-nb-adults + count adult-predators with [date-to-flee-for-this-adult = x and close? = true])) 
-    file-open test-file-name 
-    file-print (word  year " " ticks " " x " " "flee" " " store-nb-adults) 
-    file-close
+    file-open tick-file-name
+    ; init. params
+    file-type infection-rate
+    file-type " "
+    file-type proportion-of-SNH-patches
+    file-type " "
+    file-type target-for-agregation
+    file-type " "
+    file-type proba-overwintering
+    file-type " "
+    file-type init-nb-adults
+    file-type " "
+    file-type proba-birth-juvenile-predators
+    file-type " "
+    ; time
+    file-type year
+    file-type " "
+    file-type x
+    file-type " "
+    ; expl. var.
+    file-type count patches with [visit-counter > 0] ; nombre de patchs qui ont reçu au moins 1 visite, quelque soit le land-cover
+    file-type " "
+    file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0] ; nb. of patches never infected
+    file-type " "
+    file-type count patches with [land-cover = 1 and state != 0] ; dynamic of pests: nb of patches with infected status per tick
+    file-type " "
+    file-type count patches with [land-cover = 1 and (state = 1 or state = 2)] ; dynamic of pests: nb of patches infected and non-occupied, per tick
+    file-type " "
+    file-type count patches with [land-cover = 1 and (state = 3 or state = 4)] ; dynamic of pests: nb of patches infected and occupied, per tick
+    file-type " "
+    file-type sum [nb-cycles-infection-curation] of patches with [land-cover = 1] ; nb. of patches infected and then cured
+    file-type " "
+    file-type store-nb-adults; dynamic of adult-predators
+    file-type " "
+    file-type nb-infected-visited-per-year ; total number (sum) of patches which have been infected and then visited (state3) every year
+    file-type " "
+    file-type count patches with [land-cover = 1 and state = 4] ; dynamic of curation: nb of infected patches with juveniles per tick
+    file-type "\n" ; retour-chariot
+    file-close   
+    ;file-open test-file-name 
+    ;file-print (word  year " " ticks " " x " " "flee" " " store-nb-adults) 
+    ;file-close
   ]
     
   

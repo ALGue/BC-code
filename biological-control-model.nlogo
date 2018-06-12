@@ -1,4 +1,3 @@
-
 globals
 [
   date
@@ -168,7 +167,7 @@ to initiate-file-names
   set inf-event-file-name (word "inf-event" "-" file-name)
   set pred-event-file-name (word "pred-event" "-" file-name)
   set spatial-file-name (word "spatial" "-" file-name)
-  set test-file-name (word "test" "-" file-name)
+  ;set test-file-name (word "test" "-" file-name)
   ;set counter-foraging-movements-file-name (word "counter-foraging-movements" "-" file-name)
 end
 
@@ -212,7 +211,7 @@ to write-tick-file
   ; time
   file-type year
   file-type " "
-  file-type ticks
+  file-type date
   file-type " "
   ; expl. var.
   file-type count patches with [visit-counter > 0] ; nombre de patchs qui ont reçu au moins 1 visite, quelque soit le land-cover
@@ -262,13 +261,13 @@ end
 
 to write-inf-event-file
   file-open inf-event-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " "infection" " " pxcor " " pycor " " infection-date)
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " date " " "infection" " " pxcor " " pycor " " infection-date)
   file-close
 end
 
 to write-pred-event-file
   file-open pred-event-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " "arrival" " " pxcor " " pycor " " infection-date " " time-for-crop-loss)
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " date " " "arrival" " " pxcor " " pycor " " infection-date " " time-for-crop-loss)
   file-close
 end
 
@@ -277,7 +276,7 @@ end
 to write-spatial-file
   file-open spatial-file-name
   ask patches with [land-cover = 1]
-  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " ticks " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " time-for-crop-loss " " total-crop-loss-for-a-season )]
+  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " init-nb-adults " " year " " date " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " time-for-crop-loss " " total-crop-loss-for-a-season )]
   file-close
 end
 
@@ -311,58 +310,36 @@ end
 
 to go
 
-
+  ;;; Step1 : transition
   if date = 0
   [
     transition-between-years
 
-    file-open test-file-name
-    file-print (word year " " ticks " " date " " "transition" " " count adult-predators)
-    file-close
+    write-tick-file
+    ;file-open test-file-name
+    ;file-print (word year " " ticks " " date " " "transition" " " count adult-predators)
+    ;file-close
 
     tick
     set date date + 1
 
-    ;;; predators -> overwintering
-
-
-
   ]
 
-  ;;; Period 1: infection + foraging
+  ;;; Step 2: infection + foraging
 
   if 0 < date and date < date-to-flee
   [
     update-crop-patches
     ask adult-predators [forage]
 
-    file-open test-file-name
-    file-print (word year " " ticks " " date " " "forage" " " count adult-predators)
-    file-close
+    write-tick-file
+    ;file-open test-file-name
+    ;file-print (word year " " ticks " " date " " "forage" " " count adult-predators)
+    ;file-close
 
 
     tick
     set date date + 1
-
-    ; set date date + 1
-    ; set date ticks mod 180
-
-    ; tick
-
-    ; update-crop-patches
-
-    ; do adult predators survive to natural mortality? N -> die / Y -> forage
-    ; ask adult-predators [forage]
-
-    ;;; write-output-files after overwintering
-
-
-    ;;; write-tick-file for t = date < date-to-flee
-    ;write-tick-file
-    ; file-open test-file-name
-    ; file-print (word year " " ticks " " date " " "step1" " " count adult-predators)
-    ; file-close
-
 
   ]
 
@@ -376,21 +353,6 @@ to go
     tick-advance (length-season - date-to-flee)
     set date date + (length-season - date-to-flee)
 
-
-    ;;; update crop patches attributes
-    ; update-crop-loss-end-season
-    ; update-landscape-total-crop-loss-for-a-season
-
-
-
-    ;;; write-tick-file for t = date-to-flee
-    ; write-tick-file
-    ;file-open test-file-name
-    ;file-print (word year " " ticks " " date " " "step2" " " count adult-predators)
-    ;file-close
-
-    ;;; update
-
    ]
 
 
@@ -398,28 +360,28 @@ to go
 
   if date = length-season
   [
+    ;;; update crop patches attributes
+    update-crop-loss-end-season
+    update-landscape-total-crop-loss-for-a-season
+
+    ;;; write-output-files for t = length-season
+    ;
+    write-end-season-file
+    write-spatial-file
+    ;write-counter-foraging-movements-file
+
+
     overwintering
 
-    file-open test-file-name
-    file-print (word year " " ticks " " date " " "overwintering" " " count adult-predators)
-    file-close
-
-    ;set date length-season
-    ;tick
-    ;;; predators -> overwintering
-    ;overwintering
+    write-tick-file
+    ;file-open test-file-name
+    ;file-print (word year " " ticks " " date " " "overwintering" " " count adult-predators)
+    ;file-close
 
     ;;; numeric outputs
     ; output-print year
     ; output-print sum [crop-loss-1st-infection] of patches
     ; output-print sum [crop-loss] of patches
-
-    ;;; write-output-files for t = length-season
-    ;write-tick-file
-    ;write-end-season-file
-    ;write-spatial-file
-    ;write-counter-foraging-movements-file
-
 
     ;;; update season n -> season n+1
     set year year + 1
@@ -477,7 +439,7 @@ INPUTBOX
 652
 275
 infection-rate
-20.0
+1.0
 1
 0
 Number
@@ -506,7 +468,7 @@ BUTTON
 92
 NIL
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -522,7 +484,7 @@ INPUTBOX
 652
 76
 proportion-of-SNH-patches
-10.0
+30.0
 1
 0
 Number
@@ -653,7 +615,7 @@ INPUTBOX
 175
 170
 proba-mortality
-0.1
+1.0E-5
 1
 0
 Number
@@ -664,7 +626,7 @@ INPUTBOX
 1027
 511
 folder-path
-test
+NIL
 1
 0
 String
@@ -1235,18 +1197,18 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="exp0606" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="test4" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="accuracy-threshold">
       <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
+      <value value="0.1"/>
+      <value value="0.5"/>
+      <value value="1"/>
       <value value="3"/>
-      <value value="5"/>
-      <value value="7"/>
       <value value="10"/>
-      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="date-to-flee">
       <value value="150"/>
@@ -1258,13 +1220,13 @@ NetLogo 6.0.2
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;exp0606&quot;"/>
+      <value value="&quot;test4&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="length-season">
       <value value="180"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-mortality">
-      <value value="0.1"/>
+      <value value="1.0E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="init-nb-adults">
       <value value="0"/>
