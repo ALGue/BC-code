@@ -4,7 +4,9 @@ globals [
   
 ]
 
-to update-crop-patches
+;;; between start of season and date-to-flee
+
+to update-crop-patches-between-start-season-and-date-to-flee
   
   ; update predators-presence
   ask patches with [(count adult-predators-here = 0) and (count juvenile-predators-here = 0)][set predator-presence FALSE]
@@ -64,7 +66,7 @@ to update-crop-patches
   ]
 
   ; transitions
-  transitions-between-states-for-crop-patches
+  transitions-between-states-for-crop-patches-between-start-season-and-date-to-flee
 
   ; coloration
   ask patches with [land-cover = 1 and state != 0][set pcolor scale-color blue state 4 1]
@@ -74,7 +76,7 @@ end
 
 ;;;
 
-to transitions-between-states-for-crop-patches
+to transitions-between-states-for-crop-patches-between-start-season-and-date-to-flee
   
   ; sane -> latent
   ask patches with [land-cover = 1 and state = 0 and next-state = 1]
@@ -163,6 +165,71 @@ to transitions-between-states-for-crop-patches
     ask juvenile-predators-here [die]
     birth-adult-predators
   ]
+end
+
+
+;;; between date-to-flee and overwintering
+
+to update-crop-patches-between-date-to-flee-and-overwintering
+  
+  ; update occupied by juveniles
+  ask patches with [land-cover = 1 and state = 4]
+  [
+    set time-since-infection time-since-infection + 1 ; utilité ?
+    set juvenile-occupation juvenile-occupation + 1
+    if juvenile-occupation = duration-juvenile-occupation [set next-state 0]
+  ]
+
+  ; transitions
+  transitions-between-states-for-crop-patches-between-date-to-flee-and-overwintering
+
+  ; coloration
+  ask patches with [land-cover = 1 and state = 0] [set pcolor yellow]
+  
+end
+
+to transitions-between-states-for-crop-patches-between-date-to-flee-and-overwintering
+  
+  ; occupied by juveniles -> sane
+  ask patches with [land-cover = 1 and state = 4 and next-state = 0]
+  [
+    
+    ; update crop patches attributes for regulation service    
+    update-crop-loss-with-control-for-this-cycle-of-infection
+    update-total-crop-loss-for-a-season
+    
+    ; increment var total nb of crop patches infected and visited
+    set nb-infected-visited-per-year nb-infected-visited-per-year + 1
+    
+    ; increment attribute of this patch to count cycles of SIS
+    set nb-cycles-infection-curation nb-cycles-infection-curation + 1
+    
+    ; update state and attributes
+    set state 0
+    set next-state 0
+    
+    set predator-presence FALSE
+    set first-adult-predator-arrived FALSE
+
+    set infection-date FALSE
+    set time-since-infection 0
+    set time-for-crop-loss 0
+    set latent-period-duration 0
+    
+    set adult-occupation 0
+    set duration-before-eggs 0
+    
+    set juvenile-occupation 0
+    set duration-juvenile-occupation 0
+
+    set crop-loss-without-control-for-this-cycle-of-infection 0
+    set crop-loss-with-control-for-this-cycle-of-infection 0
+   
+    ; convert the juvenile turtle into an adult turtle
+    ask juvenile-predators-here [die]
+    birth-adult-predators
+  ]
+  
 end
 
 ;;; rules for pattern-infection

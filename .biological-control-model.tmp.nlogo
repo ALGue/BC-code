@@ -496,7 +496,7 @@ BUTTON
 92
 NIL
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -512,7 +512,7 @@ INPUTBOX
 652
 76
 proportion-of-SNH-patches
-10.0
+1.0
 1
 0
 Number
@@ -683,7 +683,7 @@ INPUTBOX
 173
 450
 overwintering-effect
-3.0
+1.0
 1
 0
 Number
