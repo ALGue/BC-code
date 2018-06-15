@@ -1,10 +1,7 @@
 globals 
 [
   average-green-green-neighbors
-  while-counter-ld ; counter of patches permutations to target agregation
-  
-  number-of-SNH-patches ; total number of SNH patches in the landscape
-  number-of-crop-patches ; total number of crop patches in the landscape
+  nb-permutations-to-target-agregation
 ]
 
 ; initiate a landscape grid according to the parameters of composition (number-of-SNH-patches) and configuration (target-for-agregation)
@@ -17,13 +14,6 @@ to landscape-design
   ifelse proportion-of-SNH-patches > 0
   [
   
-    ; value of number-of-SNH-patches according to proportion-of-SNH-patches
-    let total-number-of-patches-on-the-grid count patches ; total nb of patches on the grid
-    set number-of-SNH-patches precision (total-number-of-patches-on-the-grid * proportion-of-SNH-patches / 100) 0 ; precision => integer
-    set number-of-crop-patches (count patches - number-of-SNH-patches)
-   
-    
-  
     ; random land-cover landscape, according to 'number-of-SNH-patches'
     ask patches [set land-cover 1]
     ask n-of number-of-SNH-patches patches [set land-cover 0]
@@ -32,15 +22,15 @@ to landscape-design
   
     set average-green-green-neighbors mean [count neighbors with [land-cover = 0 ]] of patches with [land-cover = 0] ; while-loop fits 'average-green-green-neighbors' with 'target-of-agregation'
   
-    set while-counter-ld 0
+    set nb-permutations-to-target-agregation 0
   
-    while [(abs(average-green-green-neighbors - target-for-agregation) > accuracy-threshold) = TRUE AND (while-counter-ld < 250) = TRUE]
+    while [(abs(average-green-green-neighbors - target-for-agregation) > accuracy-threshold) = TRUE AND (nb-permutations-to-target-agregation < nb-max-permutations-to-target-agregation) = TRUE]
     [
       ; show average-green-green-neighbors
     
-      set while-counter-ld while-counter-ld + 1
+      set nb-permutations-to-target-agregation nb-permutations-to-target-agregation + 1
     
-      show while-counter-ld
+      show nb-permutations-to-target-agregation
     
       set average-green-green-neighbors mean [count neighbors with [land-cover = 0]] of patches with [land-cover = 0]
     
@@ -81,11 +71,7 @@ to landscape-design
       color-patches ; color crop patches in yellow and SNH in green
     
     ] ; end while
-    
-    
-    ; initiate attributes of patches
-    ; initiate-patches
-    
+      
     ; identify SNH clusters and label them
     find-clusters
   
@@ -97,7 +83,6 @@ to landscape-design
   [
     ask patches [set land-cover 1]
     color-patches
-    set number-of-crop-patches (count patches)
   ]
   
 end
@@ -173,23 +158,23 @@ to computation-of-proximity-with-SNH
   ; SNH patches give themselves their own coordinates and distances
   ask patches with [land-cover = 0]
   [
-    set closer-SNH-distance 0
-    set x-closer-SNH [pxcor] of self
-    set y-closer-SNH [pycor] of self
+    set closest-SNH-distance 0
+    set x-closest-SNH [pxcor] of self
+    set y-closest-SNH [pycor] of self
   ]
 
   ; SNH patches give to their crop neighbors : 1) closer-SNH-distance = 1, and 2) their own coordinates (= coordinates of the closer SNH)
   ask patches with [land-cover = 0]
   [
-    let x-closer-SNH-start pxcor
-    let y-closer-SNH-start pycor
+    let x-closest-SNH-start pxcor
+    let y-closest-SNH-start pycor
     ask neighbors4
     [
       if land-cover = 1
       [
-        set closer-SNH-distance 1
-        set x-closer-SNH x-closer-SNH-start
-        set y-closer-SNH y-closer-SNH-start
+        set closest-SNH-distance 1
+        set x-closest-SNH x-closest-SNH-start
+        set y-closest-SNH y-closest-SNH-start
       ]
     ]
   ]
@@ -197,17 +182,17 @@ to computation-of-proximity-with-SNH
   ; updated crop patches ask their not updated crop neighbors and give them : 
   ; 1) closer-SNH-distance of self + 1, 
   ; and 2) their own coordinates (= coordinates of the closer SNH)
-  while [any? patches with [closer-SNH-distance = 0 and land-cover = 1]]
+  while [any? patches with [closest-SNH-distance = 0 and land-cover = 1]]
   [
-    ask patches with [closer-SNH-distance != 0]
+    ask patches with [closest-SNH-distance != 0]
     [
       ask neighbors4
       [
-        if land-cover = 1 and  closer-SNH-distance = 0
+        if land-cover = 1 and  closest-SNH-distance = 0
         [
-          set closer-SNH-distance [closer-SNH-distance + 1] of myself
-          set x-closer-SNH [x-closer-SNH] of myself
-          set y-closer-SNH [y-closer-SNH] of myself
+          set closest-SNH-distance [closest-SNH-distance + 1] of myself
+          set x-closest-SNH [x-closest-SNH] of myself
+          set y-closest-SNH [y-closest-SNH] of myself
         ]
       ]
     ]

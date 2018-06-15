@@ -1,9 +1,3 @@
-globals
-[
-  gamma-without-CBC
-  gamma-with-CBC
-  gamma-regulation-rate
-]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;; update "regulation" attributes of one patch
 

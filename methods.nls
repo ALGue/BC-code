@@ -1,0 +1,241 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; generate predators
+
+to birth-adult-predators
+  sprout-adult-predators 1
+  [
+    set color red
+    set date-for-first-foraging-movement 7; min (list (random-poisson 20) 50) ; min entre value random poisson et date-limite de sortie
+  ]
+  set predator-presence true ; assign to patch-here that there is an adult-predator on him
+end
+
+to birth-juvenile-predators
+  sprout-juvenile-predators 1 [set color grey]
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; initialization methods
+
+to initiate-parameters
+
+  ;;; parameters for landscape
+
+  set total-number-of-patches-in-the-landscape count patches
+  set number-of-SNH-patches precision (total-number-of-patches-in-the-landscape * proportion-of-SNH-patches / 100) 0 ; precision => integer
+  set number-of-crop-patches (total-number-of-patches-in-the-landscape - number-of-SNH-patches)
+
+  ;;; parameters for dynamics
+
+  ifelse (infection-rate / 100 * number-of-crop-patches) < 1
+  ; Y -> on infecte 1 patch tous les n ticks (défini par infection-pattern-frequency = n)
+  [
+    set nb-of-crop-patches-to-infect-at-each-tick 1
+    set infection-pattern-frequency round (1 / (infection-rate / 100 * number-of-crop-patches))
+  ]
+  ; N -> on infecte n patches tous les tickes (infection-pattern-frequency = 1)
+  [
+    set nb-of-crop-patches-to-infect-at-each-tick precision (infection-rate / 100 * number-of-crop-patches) 0
+    set infection-pattern-frequency 1
+  ]
+  
+  ; ability to detect attractive crop patches
+  if ability-to-detect-attractive-crops = 9 [ set detection-radius 1.5 ]
+  if ability-to-detect-attractive-crops = 25 [ set detection-radius 2.9 ]
+  if ability-to-detect-attractive-crops = 49 [ set detection-radius 4 ]
+  
+  ; mortality
+  set gamma-mortality 0.05
+
+  ;;; parameters for service
+  set gamma-without-CBC (- ln(0.75) / (7 / 180))
+  set gamma-regulation-rate (- ln(0.75) / (7 / 180))
+
+end
+
+to initiate-patches
+  
+  ask patches
+  [
+    ;;; status
+    
+    set state 0
+    set next-state 0
+    
+    set predator-presence FALSE
+    
+    ;;; dynamic
+
+    set infection-date FALSE
+    set time-since-infection FALSE 
+    
+    set latent-period-duration FALSE 
+    
+    set date-of-predators-arrival FALSE
+    set first-adult-predator-arrived FALSE
+    set time-for-crop-loss 0 
+    
+    set duration-before-eggs FALSE 
+    set adult-occupation FALSE 
+    
+    set duration-juvenile-occupation FALSE 
+    set juvenile-occupation FALSE 
+    
+    ;;; outputs    
+
+    set visit-counter 0
+    set nb-cycles-infection-curation 0
+
+    set crop-loss-without-control-for-this-cycle-of-infection 0
+    set crop-loss-with-control-for-this-cycle-of-infection 0
+
+    set total-crop-loss-for-a-season 0
+    set crop-loss-1st-infection 0
+  ]
+  
+end
+
+to initiate-adult-predators
+  
+  if proportion-of-SNH-patches > 0
+  [
+    let counter-predators-born 0
+    let X int (init-nb-adult-predators / count patches with [land-cover = 0]) + 1
+
+    while [counter-predators-born < init-nb-adult-predators]
+    [
+      let new-patch one-of patches with [ land-cover = 0 and count adult-predators-here < X ]
+      if new-patch != nobody [ask new-patch [birth-adult-predators set counter-predators-born (counter-predators-born + 1)]]
+    ]
+  ]
+  
+end
+
+;;; à voir : changement des var. susceptibles d'être à virgule car passe pas en nom dans R (infection-rate et mortality)
+
+to initiate-file-names
+
+  ;;; var. file-name (root)
+  set file-name (word (random 1000) "-" proportion-of-SNH-patches "-" target-for-agregation "-" (remove "."(word infection-rate)) "-" (remove "."(word adult-predators-mortality)) "-" init-nb-adult-predators "-" (random 1000)".txt")
+  
+  ;;; file names
+  set tick-file-name (word "tick" "-" file-name)
+  set end-season-file-name (word "end-season" "-" file-name)
+  set inf-event-file-name (word "inf-event" "-" file-name)
+  set pred-event-file-name (word "pred-event" "-" file-name)
+  set spatial-file-name (word "spatial" "-" file-name)
+
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; transition between 2 successive years
+
+to transition-between-years
+
+  ;;; update attributes of patches
+  initiate-patches
+
+  ;;; update attributes of adult-predators
+  ask adult-predators
+  [ask patch-here [set predator-presence TRUE]] ; check
+
+  ;;; updates counters
+  set total-nb-of-adult-predators-deaths 0
+  set total-nb-of-foraging-movements 0
+
+end
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; outputs files
+
+; revoir les différents états des patchs
+; revoir compteur mouvement
+
+to write-tick-file
+  file-open tick-file-name 
+  ; init. params
+  file-type infection-rate
+  file-type " "
+  file-type proportion-of-SNH-patches
+  file-type " "
+  file-type target-for-agregation
+  file-type " "
+  file-type adult-predators-mortality
+  file-type " "
+  file-type init-nb-adult-predators
+  file-type " "
+  file-type proba-birth-juvenile-predators
+  file-type " "
+  ; time
+  file-type year
+  file-type " "
+  file-type date
+  file-type " "
+  ; expl. var.
+  file-type count patches with [visit-counter > 0] ; nombre de patchs qui ont reçu au moins 1 visite, quelque soit le land-cover
+  file-type " "
+  file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation = 0] ; nb. of patches never infected
+  file-type " "
+  file-type count patches with [land-cover = 1 and state != 0] ; dynamic of pests: nb of patches with infected status per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and (state = 1 or state = 2)] ; dynamic of pests: nb of patches infected and non-occupied, per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and state = 3] ; dynamic of pests: nb of patches infected and occupied per an adult, per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and state = 4] ; dynamic of pests: nb of patches infected and occupied per a juvenile, per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and (state = 3 or state = 4)] ; dynamic of pests: nb of patches infected and occupied, per tick
+  file-type " "
+  file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation > 0] ; nb. of patches infected and then cured
+  file-type " "
+  file-type count adult-predators ; dynamic of adult-predators
+  file-type " "
+  file-type count juvenile-predators ; dynamic of juvenile-predators
+  file-type "\n" ; carriage-return
+  file-close
+end
+
+;;; totals on landscape at end of a year
+
+to write-end-season-file
+  file-open end-season-file-name
+  ; init. params
+  file-type infection-rate
+  file-type " "
+  file-type proportion-of-SNH-patches
+  file-type " "
+  file-type target-for-agregation
+  file-type " "
+  file-type adult-predators-mortality
+  file-type " "
+  file-type init-nb-adult-predators
+  file-type " "
+  ; time
+  file-type year
+  file-type " "
+  ; sums for total landscape
+  file-type landscape-total-crop-loss-for-a-season
+  file-type " "
+  file-type total-nb-of-foraging-movements
+  file-type "\n" 
+  file-close
+end
+
+;;; time series
+
+to write-inf-event-file
+  file-open inf-event-file-name
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " "infection" " " pxcor " " pycor " " infection-date)
+  file-close
+end
+
+to write-pred-event-file
+  file-open pred-event-file-name
+  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " "arrival" " " pxcor " " pycor " " infection-date " " time-for-crop-loss)
+  file-close
+end
+
+;;; spatial distribution
+
+to write-spatial-file
+  file-open spatial-file-name
+  ask patches with [land-cover = 1]
+  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " time-for-crop-loss " " total-crop-loss-for-a-season )]
+  file-close
+end
