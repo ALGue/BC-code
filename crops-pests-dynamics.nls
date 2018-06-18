@@ -126,7 +126,7 @@ to transitions-between-states-for-crop-patches-between-start-season-and-date-to-
     
     ; update crop patches attributes for regulation service    
     update-crop-loss-with-control-for-this-cycle-of-infection
-    update-total-crop-loss-for-a-season
+    update-for-this-crop-patch-total-crop-loss-for-a-season
     
         
     ; increment attribute of this patch to count cycles of SIS
@@ -227,7 +227,7 @@ to transitions-between-states-for-crop-patches-between-date-to-flee-and-overwint
     
     ; update crop patches attributes for regulation service    
     update-crop-loss-with-control-for-this-cycle-of-infection
-    update-total-crop-loss-for-a-season
+    update-for-this-crop-patch-total-crop-loss-for-a-season
     set nb-cycles-infection-curation nb-cycles-infection-curation + 1
         
     ; update state and attributes for a new cycle

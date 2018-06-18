@@ -26,16 +26,29 @@ to adult-predators-mortality-pattern
   if mortality-pattern = "density-dependence"
   [
     let number-of-adult-predators (count adult-predators) ; adult-predators in both SNH / crops or only in crops?
-    set adult-predators-mortality (1 - (1 / number-of-adult-predators))
-    
-    ask adult-predators with [ [land-cover] of patch-here = 1 ]
+    if number-of-adult-predators > 0
     [
-      let death? precision (random-float 1) 2
-      if (death? < adult-predators-mortality)
+      set adult-predators-mortality (1 - (1 / (number-of-adult-predators ^ density-dependence-mortality-parameter)))
+      
+      ; exponential
+      ; let gamma-mortality-parameter 0.1
+      ; set adult-predators-mortality exp(- gamma-mortality-parameter * number-of-adult-predators)
+      
+      ; sigmoïd
+      ;let sigmoid-mortality-parameter-1 0.1
+      ;let sigmoid-mortality-parameter-2 0.1
+      ;set adult-predators-mortality (1 / (1 + sigmoid-mortality-parameter-1 * exp(- sigmoid-mortality-parameter-2 * number-of-adult-predators)))
+      
+    
+      ask adult-predators with [ [land-cover] of patch-here = 1 ]
       [
-        if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]]
-        set total-nb-of-adult-predators-deaths (total-nb-of-adult-predators-deaths + 1)
-        die 
+        let death? precision (random-float 1) 2
+        if (death? < adult-predators-mortality)
+        [
+          if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]]
+          set total-nb-of-adult-predators-deaths (total-nb-of-adult-predators-deaths + 1)
+          die 
+        ]
       ]
     ]
   ]
@@ -109,62 +122,47 @@ end
 
 to foraging-pattern
   
-  ; y a-t-il un patch attractif dans les 8 + proches voisins, si oui on va dessus, sinon on regarde + loin
-  ; ifelse any? patches in-radius 1.5 with [state = 2 and land-cover = 1]
-  ; oui -> on va dessus
-  ; [
+ifelse any? patches in-radius detection-radius with [state = 2 and land-cover = 1] 
+  ; any patch in detection-radius? -> Y : arrival - patch = closer in-radius 1.5
+  [
+    ; choose directional-patch
+    let more-infected-crop-patch-in-radius max-one-of patches in-radius detection-radius with [land-cover = 1 and state = 2] [time-since-infection]
+     
     ; choose arrival-patch
-    ; let more-infected-crop-patch-in-radius max-one-of patches in-radius 1.5 with [land-cover = 1 and state = 2] [time-since-infection] 
-    
+    let arrival-patch min-one-of patches in-radius 1.5 [distance more-infected-crop-patch-in-radius]
+      
     ; update departure-patch
-    ; if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
+    if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
     
     ; adult-predator agent moves to arrival-patch
-    ; face more-infected-crop-patch-in-radius 
-    ; move-to more-infected-crop-patch-in-radius
+    face arrival-patch
+    move-to arrival-patch
+    ifelse [land-cover] of arrival-patch = 0 
+    [set total-nb-of-foraging-movements-in-SNH total-nb-of-foraging-movements-in-SNH + 1]
+    [set total-nb-of-foraging-movements-in-crops total-nb-of-foraging-movements-in-crops + 1]
     
     ; update arrival-patch
-    ; ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
-  ; ]
-  ; non -> on élargit le radius
-  ; [
-    ; y a-t-il un patch attractif dans les 24 + proches voisins, si oui on va sur le patch le + proche dans radius 1.5, sinon mvt aléatoire in-radius 1.5
-    ifelse any? patches in-radius detection-radius with [state = 2 and land-cover = 1] 
-    ; oui -> on va sur le patch in-radius 1.5 le + proche du patch attractif in-radius 2.9
-    [
-      ; choose directional-patch
-      let more-infected-crop-patch-in-radius max-one-of patches in-radius detection-radius with [land-cover = 1 and state = 2] [time-since-infection]
-     
-      ; choose arrival-patch
-      let arrival-patch min-one-of patches in-radius 1.5 [distance more-infected-crop-patch-in-radius]
+    ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
       
-      ; update departure-patch
-      if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
+  ]
+  ; N -> random foraging movement in-radius 1.5
+  [
+    ; choose arrival-patch
+    let arrival-patch one-of patches in-radius 1.5
     
-      ; adult-predator agent moves to arrival-patch
-      face arrival-patch
-      move-to arrival-patch
+    ; update departure-patch
+    if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
     
-      ; update arrival-patch
-      ask patch-here [set predator-presence TRUE set visit-counter visit-counter + 1]
-      
-    ]
-    ; non -> mvt aléatoire in-radius 1.5
-    [
-      ; choose arrival-patch
-      let p one-of patches in-radius 1.5
+    ; adult-predator agent moves to arrival-patch
+    face arrival-patch
+    move-to arrival-patch
+    ifelse [land-cover] of arrival-patch = 0 
+    [set total-nb-of-foraging-movements-in-SNH total-nb-of-foraging-movements-in-SNH + 1]
+    [set total-nb-of-foraging-movements-in-crops total-nb-of-foraging-movements-in-crops + 1]
     
-      ; update departure-patch
-      if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
-    
-      ; adult-predator agent moves to arrival-patch
-      face p 
-      move-to p 
-    
-      ; update arrival-patch
-      ask patch-here [set predator-presence TRUE]
-    ]
-  ;]
+    ; update arrival-patch
+    ask patch-here [set predator-presence TRUE]
+  ]
   
   set total-nb-of-foraging-movements total-nb-of-foraging-movements + 1
   

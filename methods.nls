@@ -43,7 +43,7 @@ to initiate-parameters
   if ability-to-detect-attractive-crops = 49 [ set detection-radius 4 ]
   
   ; mortality
-  set gamma-mortality 0.05
+  set density-dependence-mortality-parameter 0.1
 
   ;;; parameters for service
   set gamma-without-CBC (- ln(0.75) / (7 / 180))
@@ -139,6 +139,8 @@ to transition-between-years
   ;;; updates counters
   set total-nb-of-adult-predators-deaths 0
   set total-nb-of-foraging-movements 0
+  set total-nb-of-foraging-movements-in-crops 0
+  set total-nb-of-foraging-movements-in-SNH 0
 
 end
 
@@ -213,6 +215,10 @@ to write-end-season-file
   file-type landscape-total-crop-loss-for-a-season
   file-type " "
   file-type total-nb-of-foraging-movements
+  file-type " "
+  file-type total-nb-of-foraging-movements-in-crops
+  file-type " "
+  file-type total-nb-of-foraging-movements-in-SNH
   file-type "\n" 
   file-close
 end

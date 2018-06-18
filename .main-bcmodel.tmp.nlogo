@@ -272,7 +272,7 @@ INPUTBOX
 633
 72
 infection-rate
-1.0
+10.0
 1
 0
 Number
@@ -317,7 +317,7 @@ INPUTBOX
 175
 70
 proportion-of-SNH-patches
-10.0
+90.0
 1
 0
 Number
@@ -437,7 +437,7 @@ INPUTBOX
 832
 511
 folder-path
-test6
+data1806
 1
 0
 String
@@ -466,7 +466,7 @@ INPUTBOX
 632
 287
 adult-predators-mortality
-0.09
+0.08
 1
 0
 Number
@@ -1209,6 +1209,62 @@ NetLogo 6.0.2
     <enumeratedValueSet variable="proba-birth-juvenile-predators">
       <value value="1"/>
     </enumeratedValueSet>
+  </experiment>
+  <experiment name="data1806" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality-pattern">
+      <value value="&quot;constant&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="adult-predators-mortality">
+      <value value="0.01"/>
+      <value value="0.08"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-max-permutations-to-target-agregation">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-nb-adult-predators">
+      <value value="0"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="0.1"/>
+      <value value="0.3"/>
+      <value value="0.5"/>
+      <value value="0.7"/>
+      <value value="0.9"/>
+      <value value="2"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;data1806&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ability-to-detect-attractive-crops">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="overwintering-effect">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
   </experiment>
 </experiments>
 @#$#@#$#@
