@@ -1,5 +1,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; globals
 
+;;; Interface parameters
+
+; proportion-of-SNH-patches
+; target-for-agregation
+; accuracy-threshold
+; nb-max-permutations-to-target-agregation
+
+; mortality-pattern
+; ability-to-detect-attractive-crops
+
+; nb-years
+; length-season
+; date-to-flee
+
+; infection-rate
+; init-nb-adult-predators
+; proba-birth-juvenile-predators => possibilité de le transformer en proba d'installation d'une pop adulte sur un patch infecté ?
+; adult-predators-mortality
+; overwintering-effect
+
 globals
 [
   ;;; landscape-design
@@ -30,7 +50,7 @@ globals
   gamma-regulation-rate
   landscape-total-crop-loss-for-a-season ; sum of the crop-loss for all patches at the end of the season
 
-  ;;; outputs
+  ;;; files for outputs
   file-name ; var. root file-name
   ; var. file names
   tick-file-name
@@ -92,6 +112,7 @@ patches-own
   ;;; outputs
 
   visit-counter
+  nb-cycles-of-infection ; count nb. of times a patch is infected
   nb-cycles-infection-curation ; count cycles of SIS (for a single patch)
 
   crop-loss-without-control-for-this-cycle-of-infection ; for the current cycle of infection, value of crop loss (th. max)
@@ -121,7 +142,7 @@ to setup
   clear-all
   reset-ticks
 
-  initiate-parameters
+  initialize-parameters
 
   landscape-design
 
@@ -129,10 +150,10 @@ to setup
   set date 0
   set year 1
 
-  initiate-adult-predators
+  initialize-adult-predators
 
   set-current-directory (word "/home/antoine/Documents/Git/Biological-Control/biocontrolanalysis/data/" folder-path)
-  initiate-file-names
+  initialize-file-names
 
 end
 
@@ -272,7 +293,7 @@ INPUTBOX
 633
 72
 infection-rate
-1.0
+0.75
 1
 0
 Number
@@ -317,7 +338,7 @@ INPUTBOX
 175
 70
 proportion-of-SNH-patches
-10.0
+90.0
 1
 0
 Number
@@ -437,7 +458,7 @@ INPUTBOX
 832
 511
 folder-path
-test6
+data0207scenarioref2
 1
 0
 String
@@ -466,7 +487,7 @@ INPUTBOX
 632
 287
 adult-predators-mortality
-0.09
+0.05
 1
 0
 Number
@@ -488,7 +509,7 @@ INPUTBOX
 239
 279
 nb-max-permutations-to-target-agregation
-250.0
+200.0
 1
 0
 Number
@@ -522,7 +543,7 @@ CHOOSER
 ability-to-detect-attractive-crops
 ability-to-detect-attractive-crops
 9 25 49
-1
+0
 
 PLOT
 336
@@ -541,6 +562,17 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot adult-predators-mortality"
+
+MONITOR
+291
+253
+465
+298
+NIL
+patches with [state != 0]
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1208,6 +1240,174 @@ NetLogo 6.0.2
     <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
     <enumeratedValueSet variable="proba-birth-juvenile-predators">
       <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="data1806" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality-pattern">
+      <value value="&quot;constant&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="adult-predators-mortality">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-max-permutations-to-target-agregation">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-nb-adult-predators">
+      <value value="0"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="0.1"/>
+      <value value="0.3"/>
+      <value value="0.5"/>
+      <value value="0.7"/>
+      <value value="0.9"/>
+      <value value="2"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;data1806&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ability-to-detect-attractive-crops">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="overwintering-effect">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="proportion-of-SNH-patches" first="0" step="10" last="90"/>
+  </experiment>
+  <experiment name="reunion" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality-pattern">
+      <value value="&quot;constant&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="adult-predators-mortality">
+      <value value="0.02"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-max-permutations-to-target-agregation">
+      <value value="250"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-nb-adult-predators">
+      <value value="0"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;reunion&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ability-to-detect-attractive-crops">
+      <value value="25"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="overwintering-effect">
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-of-SNH-patches">
+      <value value="1"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="data0207scenarioref" repetitions="5" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <enumeratedValueSet variable="accuracy-threshold">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mortality-pattern">
+      <value value="&quot;constant&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="adult-predators-mortality">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="length-season">
+      <value value="180"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-max-permutations-to-target-agregation">
+      <value value="200"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proba-birth-juvenile-predators">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="init-nb-adult-predators">
+      <value value="0"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="infection-rate">
+      <value value="0.75"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="date-to-flee">
+      <value value="150"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="nb-years">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="folder-path">
+      <value value="&quot;data0207scenarioref2&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="ability-to-detect-attractive-crops">
+      <value value="9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="target-for-agregation">
+      <value value="1"/>
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="overwintering-effect">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="proportion-of-SNH-patches">
+      <value value="0"/>
+      <value value="10"/>
+      <value value="20"/>
+      <value value="30"/>
+      <value value="40"/>
+      <value value="50"/>
+      <value value="60"/>
+      <value value="70"/>
+      <value value="80"/>
+      <value value="90"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

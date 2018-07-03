@@ -130,6 +130,7 @@ ifelse any? patches in-radius detection-radius with [state = 2 and land-cover = 
      
     ; choose arrival-patch
     let arrival-patch min-one-of patches in-radius 1.5 [distance more-infected-crop-patch-in-radius]
+    ; let arrival-patch min-one-of neighbors4 [distance more-infected-crop-patch-in-radius]
       
     ; update departure-patch
     if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch
@@ -149,6 +150,7 @@ ifelse any? patches in-radius detection-radius with [state = 2 and land-cover = 
   [
     ; choose arrival-patch
     let arrival-patch one-of patches in-radius 1.5
+    ;let arrival-patch one-of neighbors4
     
     ; update departure-patch
     if (count adult-predators-here = 1 and count juvenile-predators-here = 0) [ask patch-here [set predator-presence FALSE]] ; if adult-predators was the only one on this patch

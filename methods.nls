@@ -15,7 +15,7 @@ end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; initialization methods
 
-to initiate-parameters
+to initialize-parameters
 
   ;;; parameters for landscape
 
@@ -51,7 +51,7 @@ to initiate-parameters
 
 end
 
-to initiate-patches
+to initialize-patches
   
   ask patches
   [
@@ -93,7 +93,7 @@ to initiate-patches
   
 end
 
-to initiate-adult-predators
+to initialize-adult-predators
   
   if proportion-of-SNH-patches > 0
   [
@@ -111,7 +111,7 @@ end
 
 ;;; à voir : changement des var. susceptibles d'être à virgule car passe pas en nom dans R (infection-rate et mortality)
 
-to initiate-file-names
+to initialize-file-names
 
   ;;; var. file-name (root)
   set file-name (word (random 1000) "-" proportion-of-SNH-patches "-" target-for-agregation "-" (remove "."(word infection-rate)) "-" (remove "."(word adult-predators-mortality)) "-" init-nb-adult-predators "-" (random 1000)".txt")
@@ -125,22 +125,29 @@ to initiate-file-names
 
 end
 
+to initialize-output-counters
+  
+  ;;; for adult-predators dynamics
+  set total-nb-of-adult-predators-deaths 0
+  set total-nb-of-foraging-movements 0
+  set total-nb-of-foraging-movements-in-crops 0
+  set total-nb-of-foraging-movements-in-SNH 0
+  
+end
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; transition between 2 successive years
 
 to transition-between-years
 
   ;;; update attributes of patches
-  initiate-patches
+  initialize-patches
 
   ;;; update attributes of adult-predators
   ask adult-predators
   [ask patch-here [set predator-presence TRUE]] ; check
 
   ;;; updates counters
-  set total-nb-of-adult-predators-deaths 0
-  set total-nb-of-foraging-movements 0
-  set total-nb-of-foraging-movements-in-crops 0
-  set total-nb-of-foraging-movements-in-SNH 0
+  initialize-output-counters
 
 end
 
@@ -150,6 +157,7 @@ end
 ; revoir compteur mouvement
 
 to write-tick-file
+  
   file-open tick-file-name 
   ; init. params
   file-type infection-rate
@@ -163,6 +171,8 @@ to write-tick-file
   file-type init-nb-adult-predators
   file-type " "
   file-type proba-birth-juvenile-predators
+  file-type " "
+  file-type overwintering-effect
   file-type " "
   ; time
   file-type year
@@ -191,11 +201,13 @@ to write-tick-file
   file-type count juvenile-predators ; dynamic of juvenile-predators
   file-type "\n" ; carriage-return
   file-close
+  
 end
 
 ;;; totals on landscape at end of a year
 
 to write-end-season-file
+  
   file-open end-season-file-name
   ; init. params
   file-type infection-rate
@@ -211,37 +223,131 @@ to write-end-season-file
   ; time
   file-type year
   file-type " "
-  ; sums for total landscape
-  file-type landscape-total-crop-loss-for-a-season
+  ; outputs at the end of the season for the whole landscape (sums)
+  ;;; landscape
+  file-type count patches with [land-cover = 1] ; total-number-of-crops-infected-during-the-year  
   file-type " "
-  file-type total-nb-of-foraging-movements
+  ;;; infection dynamics
+  file-type sum [nb-cycles-of-infection] of patches with [land-cover = 1]   
+  file-type " "
+  file-type count patches with [land-cover = 1 and nb-cycles-infection-curation > 0] 
+  file-type " " 
+  ;;; adult-predators-dynamics
+  file-type count adult-predators ; total-number-of-adult-predators-at-the-end-of-season
+  file-type " "
+  file-type total-nb-of-foraging-movements 
   file-type " "
   file-type total-nb-of-foraging-movements-in-crops
   file-type " "
   file-type total-nb-of-foraging-movements-in-SNH
+  file-type " "
+  file-type landscape-total-crop-loss-for-a-season ;;; service for the whole landscape (sum of crop-loss for every patch)
   file-type "\n" 
   file-close
+  
 end
 
 ;;; time series
 
 to write-inf-event-file
+  
   file-open inf-event-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " "infection" " " pxcor " " pycor " " infection-date)
+  
+  file-print (word 
+    proportion-of-SNH-patches 
+    " "
+    target-for-agregation 
+    " " 
+    infection-rate 
+    " " 
+    adult-predators-mortality 
+    " " 
+    init-nb-adult-predators 
+    " " 
+    year 
+    " " 
+    date " " 
+    "infection" 
+    " " 
+    pxcor 
+    " " 
+    pycor 
+    " " 
+    infection-date)
+  
   file-close
+  
 end
 
 to write-pred-event-file
+  
   file-open pred-event-file-name
-  file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " "arrival" " " pxcor " " pycor " " infection-date " " time-for-crop-loss)
+  
+  file-print (word 
+    proportion-of-SNH-patches 
+    " " 
+    target-for-agregation 
+    " " 
+    infection-rate 
+    " " 
+    adult-predators-mortality 
+    " " 
+    init-nb-adult-predators 
+    " " 
+    year 
+    " " 
+    date 
+    " " 
+    "arrival" 
+    " " 
+    pxcor 
+    " " 
+    pycor 
+    " " 
+    infection-date 
+    " " 
+    time-for-crop-loss)
+  
   file-close
+  
 end
 
 ;;; spatial distribution
 
 to write-spatial-file
+  
   file-open spatial-file-name
+  
   ask patches with [land-cover = 1]
-  [file-print (word proportion-of-SNH-patches " " target-for-agregation " " infection-rate " " adult-predators-mortality " " init-nb-adult-predators " " year " " date " " pxcor " " pycor " " land-cover " " visit-counter " " nb-cycles-infection-curation " " time-for-crop-loss " " total-crop-loss-for-a-season )]
+  [file-print (word 
+    proportion-of-SNH-patches 
+    " " 
+    target-for-agregation 
+    " " 
+    infection-rate 
+    " " 
+    adult-predators-mortality 
+    " " 
+    init-nb-adult-predators 
+    " " 
+    year 
+    " " 
+    date 
+    " " 
+    pxcor 
+    " " 
+    pycor 
+    " " 
+    land-cover 
+    " " 
+    visit-counter 
+    " " 
+    nb-cycles-infection-curation 
+    " " 
+    time-for-crop-loss 
+    " " 
+    total-crop-loss-for-a-season )]
+  
   file-close
+  
 end
