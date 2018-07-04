@@ -33,7 +33,8 @@ to initialize-parameters
   ]
   ; N -> on infecte n patches tous les tickes (infection-pattern-frequency = 1)
   [
-    set nb-of-crop-patches-to-infect-at-each-tick precision (infection-rate / 100 * number-of-crop-patches) 0
+    ; set nb-of-crop-patches-to-infect-at-each-tick precision (infection-rate / 100 * number-of-crop-patches) 0
+    set nb-of-crop-patches-to-infect-at-each-tick ceiling (infection-rate / 100 * number-of-crop-patches)
     set infection-pattern-frequency 1
   ]
   
@@ -63,7 +64,7 @@ to initialize-patches
     set predator-presence FALSE
     
     ;;; dynamic
-
+    
     set infection-date FALSE
     set time-since-infection FALSE 
     
@@ -82,6 +83,7 @@ to initialize-patches
     ;;; outputs    
 
     set visit-counter 0
+    set nb-cycles-of-infection 0
     set nb-cycles-infection-curation 0
 
     set crop-loss-without-control-for-this-cycle-of-infection 0
@@ -114,8 +116,26 @@ end
 to initialize-file-names
 
   ;;; var. file-name (root)
-  set file-name (word (random 1000) "-" proportion-of-SNH-patches "-" target-for-agregation "-" (remove "."(word infection-rate)) "-" (remove "."(word adult-predators-mortality)) "-" init-nb-adult-predators "-" (random 1000)".txt")
+  set file-name (word 
+    (random 1000) 
+    "-" 
+    proportion-of-SNH-patches 
+    "-" 
+    target-for-agregation 
+    "-" 
+    (remove "."(word infection-rate)) 
+    "-" 
+    (remove "."(word adult-predators-mortality)) 
+    "-" 
+    init-nb-adult-predators 
+    "-" 
+    overwintering-effect
+    "-" 
+    ability-to-detect-attractive-crops
+    "-" 
+    (random 1000)".txt")
   
+                               
   ;;; file names
   set tick-file-name (word "tick" "-" file-name)
   set end-season-file-name (word "end-season" "-" file-name)
@@ -174,6 +194,8 @@ to write-tick-file
   file-type " "
   file-type overwintering-effect
   file-type " "
+  file-type ability-to-detect-attractive-crops
+  file-type " "
   ; time
   file-type year
   file-type " "
@@ -220,17 +242,21 @@ to write-end-season-file
   file-type " "
   file-type init-nb-adult-predators
   file-type " "
+  file-type overwintering-effect
+  file-type " "
+  file-type ability-to-detect-attractive-crops
+  file-type " "
   ; time
   file-type year
   file-type " "
   ; outputs at the end of the season for the whole landscape (sums)
   ;;; landscape
-  file-type count patches with [land-cover = 1] ; total-number-of-crops-infected-during-the-year  
+  file-type number-of-SNH-patches ; total number of SNH  
   file-type " "
   ;;; infection dynamics
   file-type sum [nb-cycles-of-infection] of patches with [land-cover = 1]   
   file-type " "
-  file-type count patches with [land-cover = 1 and nb-cycles-infection-curation > 0] 
+  file-type count patches with [land-cover = 1 and state = 0 and nb-cycles-infection-curation > 0] 
   file-type " " 
   ;;; adult-predators-dynamics
   file-type count adult-predators ; total-number-of-adult-predators-at-the-end-of-season
@@ -264,9 +290,14 @@ to write-inf-event-file
     " " 
     init-nb-adult-predators 
     " " 
+    overwintering-effect
+    " "
+    ability-to-detect-attractive-crops
+    " "
     year 
     " " 
-    date " " 
+    date 
+    " " 
     "infection" 
     " " 
     pxcor 
@@ -293,7 +324,11 @@ to write-pred-event-file
     adult-predators-mortality 
     " " 
     init-nb-adult-predators 
+    " "
+    overwintering-effect
     " " 
+    ability-to-detect-attractive-crops
+    " "
     year 
     " " 
     date 
@@ -329,7 +364,11 @@ to write-spatial-file
     adult-predators-mortality 
     " " 
     init-nb-adult-predators 
+    " "
+    overwintering-effect
     " " 
+    ability-to-detect-attractive-crops
+    " "
     year 
     " " 
     date 

@@ -152,7 +152,7 @@ to setup
 
   initialize-adult-predators
 
-  set-current-directory (word "/home/antoine/Documents/Git/Biological-Control/biocontrolanalysis/data/" folder-path)
+  set-current-directory (word "/home/antoine/Documents/Git/Biological-Control/biocontrolanalysisnoRgit/data/" folder-path)
   initialize-file-names
 
 end
@@ -293,7 +293,7 @@ INPUTBOX
 633
 72
 infection-rate
-0.75
+3.0
 1
 0
 Number
@@ -338,7 +338,7 @@ INPUTBOX
 175
 70
 proportion-of-SNH-patches
-90.0
+70.0
 1
 0
 Number
@@ -349,7 +349,7 @@ INPUTBOX
 176
 138
 target-for-agregation
-5.0
+1.0
 1
 0
 Number
@@ -458,7 +458,7 @@ INPUTBOX
 832
 511
 folder-path
-data0207scenarioref2
+data0307
 1
 0
 String
@@ -498,7 +498,7 @@ INPUTBOX
 631
 360
 overwintering-effect
-1.0
+3.0
 1
 0
 Number
@@ -509,7 +509,7 @@ INPUTBOX
 239
 279
 nb-max-permutations-to-target-agregation
-200.0
+150.0
 1
 0
 Number
@@ -543,7 +543,7 @@ CHOOSER
 ability-to-detect-attractive-crops
 ability-to-detect-attractive-crops
 9 25 49
-0
+2
 
 PLOT
 336
@@ -562,17 +562,6 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot adult-predators-mortality"
-
-MONITOR
-291
-253
-465
-298
-NIL
-patches with [state != 0]
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1350,7 +1339,7 @@ NetLogo 6.0.2
       <value value="10"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="data0207scenarioref" repetitions="5" runMetricsEveryStep="true">
+  <experiment name="data0207scenarioref" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <enumeratedValueSet variable="accuracy-threshold">
@@ -1366,7 +1355,7 @@ NetLogo 6.0.2
       <value value="180"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="nb-max-permutations-to-target-agregation">
-      <value value="200"/>
+      <value value="150"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proba-birth-juvenile-predators">
       <value value="1"/>
@@ -1377,6 +1366,9 @@ NetLogo 6.0.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="infection-rate">
       <value value="0.75"/>
+      <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="date-to-flee">
       <value value="150"/>
@@ -1385,17 +1377,20 @@ NetLogo 6.0.2
       <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="folder-path">
-      <value value="&quot;data0207scenarioref2&quot;"/>
+      <value value="&quot;data0307&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="ability-to-detect-attractive-crops">
       <value value="9"/>
+      <value value="25"/>
+      <value value="49"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="target-for-agregation">
       <value value="1"/>
-      <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="overwintering-effect">
       <value value="1"/>
+      <value value="2"/>
+      <value value="3"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="proportion-of-SNH-patches">
       <value value="0"/>

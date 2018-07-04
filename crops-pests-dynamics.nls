@@ -177,7 +177,7 @@ end
 ; à chaque tick, on infecte un % du stock de crops : ex. si inf-rate = 4, alors 4% du stock initial de crops est infecté à chaque tick
 to pattern-infection
     
-  if (ticks mod infection-pattern-frequency) = 0 ; pattern-infection occurs every 3 ticks (not every tick)
+  if (ticks mod infection-pattern-frequency) = 0 and (date < date-to-flee - 7) ; pattern-infection occurs every 3 ticks (not every tick)
   [
     ; each tick, a certain number of sane patches are infected
     ; avec la condition nb-cycles-infection-curation = 0, on n'autorise qu'une seule infection par an
